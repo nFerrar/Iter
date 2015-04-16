@@ -1,24 +1,95 @@
 import sys
 
-Player = {##====================Here is a basic dictionary that makes a player. Stats fluffed.
-	"Stats" : {
-		"Name" : "Dickbutt",
-		"Age" : 23,
-		"Height" : 180,
-		"Weight" : 90,
-		"Health" : 100,
-		"Stamina" : 100,
-		"Focus" : 100,
-		"Hunger" : 50,
-		"Thirst" : 50,
-	},
+'''TIME TO MAKE CLASSES INSTEAD'''
+class Person(object):
+	def __init__(self, name, age, health, stamina, focus, hunger, inventory):
+		self.name = name
+		self.age = age
+		self.health = health
+		self.stamina = stamina
+		self.focus = focus
+		self.hunger = hunger
+		self.inventory = inventory
 	
-	"Inventory" : {
-		"Clothes" : 100,
-		"Wallet" : 100,
-		"Money" : 30,
-	},
-}
+	def addToInventory(self, newItem):
+		for ob in self.inventory:
+			if(ob == newItem):
+				self.inventory.ob += 1
+				break
+		
+		else:
+			self.inventory.append(newItem)
+			
+	def removeFromInventory(item):
+		for ob in self.inventory:
+			if(ob == item):
+				self.inventory.remove(item)
+				break
+		
+		else:
+			print("You don't have a %s." % (str(item)))
+	
+class PC(Person):
+	def checkInventory(self):
+		print("You take a moment to check what you're carrying.")
+		print("You have on you:")
+		for i in self.inventory:
+			if(self.inventory[i] > 1):
+				print(str(self.inventory[i]) + " " + str(i) + "s")
+			else:
+				print(str(i))
+
+pInv = {
+		"Clothing" : 1,
+		"Wallet" : 1,
+		"Shin" : 30,
+		}
+Player = PC("Dickbutt", 23, 100, 100, 100, 100, pInv)
+
+class Zone(object):
+	def __init__(self, name, references, description, contents, exits):
+		self.name = name
+		self.references = reference
+		self.description = description
+		self.contents = contents
+		self.exits = exits
+		
+	def examineRoom(self):
+		print("You are in a " + description)
+		
+	def searchRoom(self):
+		print("You search the immediate area, and you find:")
+		for c in self.contents:
+			if(self.contents[c] > 1):
+				print(self.contents[c] + " " + c + "s")
+			else:
+				print(c)
+				
+	def addItem(self, item):
+		for i in self.contents:
+			if(item == i):
+				self.contents[i] += 1
+		
+		else:
+			self.content.append(item)
+	
+	def removeItem(self, item):
+		for i in self.contents:
+			if(item == i):
+				self.contents.remove(i)
+		
+		else:
+			print("There isn't a %s here." % (str(item)))
+
+			
+TestRoomReferences = ["room", "area", "surroundings", "zone",]
+TestRoomDescription = "a small and uninteresting room. You don't remember how you got here, or even what this place is but you know it's the beginning of something much larger than you."
+TestRoomContents = {
+	"light" : "a Light",
+	"box" : "a Box",
+	"cloth" : "a piece of Cloth",
+	}
+TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits)
 
 Commands = ["search", "quit", "go", "examine", "use", "open", "close", "help",]
 
@@ -43,7 +114,7 @@ Items = {
 	},
 }
 
-TestRoom = {##===========================A Room, I will have to standardise all dictionaries to make the Scene function as smooth as possible.
+'''TestRoom = {##===========================A Room, I will have to standardise all dictionaries to make the Scene function as smooth as possible.
 	"Name" : "the Test Room",
 	"References" : ["room", "area", "surroundings", "zone",],##room should just reference your current location
 	"Description" : "a small and uninteresting room. You don't remember how you got here, or even what this place is but you know it's the beginning of something much larger than you.",
@@ -53,7 +124,7 @@ TestRoom = {##===========================A Room, I will have to standardise all 
 		"cloth" : "a piece of Cloth",
 	},
 	"Exits" : ["South",],
-}
+}'''
 
 def ChangeLocation(oldLocation, newLocation, Character):
 	print("You step out of the " + oldLocation.get("Name") + " and into " + newLocation.get("Name") + ", " + newLocation.get("Description"))
@@ -63,9 +134,18 @@ def Scene(Location, Character):##===================This is the active function 
 	cmd = input(">>>")
 	
 	if(cmd.lower() == "search"):
-		Search(Location, Player)
+		Location.searchRoom()
+		Scene(Location, Character)
 	if(cmd.lower() == "examine"):
-		Examine(Location, Character)
+		cmd = input("Examine what? >>>")
+		
+		for i in Location.References:
+			if(cmd == i):
+				Location.examineRoom()
+				
+		else for i in Location.Contents:
+			if(cmd == i):
+				##WHEN YOU GET THE ENERGY FINISH THIS SHIT
 		
 	if(cmd.lower() == "quit" or cmd.lower() == "exit"):
 		cmd = input("Are you sure you want to quit?")
@@ -76,6 +156,10 @@ def Scene(Location, Character):##===================This is the active function 
 			
 		else:
 			Scene(Location, Character)
+	
+	if(cmd.lower() == "inventory" or cmd.lower() == "inv"):
+		Player.checkInventory()
+		Scene(Location, Character)
 			
 	if(cmd.lower() == "help" or cmd.lower() == "commands"):
 		print("Available Commands:")
@@ -125,8 +209,8 @@ def boot():##=========================Just the boot screen
 	print("Coming Soon.")
 	print("Type your name to enter the test room.")
 	cmd = input(">>>")
-	Player["Stats"]["Name"] = cmd
-	print("Welcome " + Player["Stats"]["Name"] + ".")
+	Player.name = cmd
+	print("Welcome %s." % (Player.name))
 	ChangeLocation(TestRoom, TestRoom, Player)
 
 boot()##====================the only base level command if at all possible.
