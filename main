@@ -40,30 +40,30 @@ class PC(Person):
 				print(str(i))
 
 pInv = {
-		"Clothing" : 1,
-		"Wallet" : 1,
-		"Shin" : 30,
+		"clothing" : 1,
+		"wallet" : 1,
+		"shin" : 30,
 		}
 Player = PC("Dickbutt", 23, 100, 100, 100, 100, pInv)
 
 class Zone(object):
 	def __init__(self, name, references, description, contents, exits):
 		self.name = name
-		self.references = reference
+		self.references = references
 		self.description = description
 		self.contents = contents
 		self.exits = exits
 		
 	def examineRoom(self):
-		print("You are in a " + description)
+		print("You are in a " + self.description)
 		
 	def searchRoom(self):
 		print("You search the immediate area, and you find:")
 		for c in self.contents:
-			if(self.contents[c] > 1):
-				print(self.contents[c] + " " + c + "s")
-			else:
-				print(c)
+			print(self.contents[c])
+		print("And exits to the")
+		for x in self.exits:
+			print(x)
 				
 	def addItem(self, item):
 		for i in self.contents:
@@ -71,7 +71,7 @@ class Zone(object):
 				self.contents[i] += 1
 		
 		else:
-			self.content.append(item)
+			self.contents.append(item)
 	
 	def removeItem(self, item):
 		for i in self.contents:
@@ -89,6 +89,7 @@ TestRoomContents = {
 	"box" : "a Box",
 	"cloth" : "a piece of Cloth",
 	}
+TestRoomExits = ["south",]
 TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits)
 
 Commands = ["search", "quit", "go", "examine", "use", "open", "close", "help",]
@@ -127,7 +128,7 @@ Items = {
 }'''
 
 def ChangeLocation(oldLocation, newLocation, Character):
-	print("You step out of the " + oldLocation.get("Name") + " and into " + newLocation.get("Name") + ", " + newLocation.get("Description"))
+	print("You step out of the " + oldLocation.name + " and into " + newLocation.name + ", " + newLocation.description)
 	Scene(newLocation, Player)
 
 def Scene(Location, Character):##===================This is the active function at all times. Pretty much will have to ave its own rolling dictionary of everything.
@@ -139,13 +140,25 @@ def Scene(Location, Character):##===================This is the active function 
 	if(cmd.lower() == "examine"):
 		cmd = input("Examine what? >>>")
 		
-		for i in Location.References:
-			if(cmd == i):
+		for i in Location.references:
+			if(cmd.lower() == i):
 				Location.examineRoom()
+				Scene(Location, Character)
 				
-		else for i in Location.Contents:
-			if(cmd == i):
-				##WHEN YOU GET THE ENERGY FINISH THIS SHIT
+		else:
+			for i in Location.contents:
+				if(cmd.lower() == i):
+					print("Object examine not yet implemented")
+					Scene(Location, Character)
+			else:
+				for i in Player.inventory:
+					if(cmd.lower() == i):
+						print("Inventory examine not yet implemented.")
+						Scene(Location, Character)
+				else:
+					print("You don't see a %s here." % (cmd))
+					Scene(Location, Character)
+				
 		
 	if(cmd.lower() == "quit" or cmd.lower() == "exit"):
 		cmd = input("Are you sure you want to quit?")
