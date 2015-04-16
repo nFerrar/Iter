@@ -1,0 +1,132 @@
+import sys
+
+Player = {##====================Here is a basic dictionary that makes a player. Stats fluffed.
+	"Stats" : {
+		"Name" : "Dickbutt",
+		"Age" : 23,
+		"Height" : 180,
+		"Weight" : 90,
+		"Health" : 100,
+		"Stamina" : 100,
+		"Focus" : 100,
+		"Hunger" : 50,
+		"Thirst" : 50,
+	},
+	
+	"Inventory" : {
+		"Clothes" : 100,
+		"Wallet" : 100,
+		"Money" : 30,
+	},
+}
+
+Commands = ["search", "quit", "go", "examine", "use", "open", "close", "help",]
+
+Items = {
+	"light" : {
+		"examine" : "a small, dull lightbulb hanging from the ceiling by a thin cord.",
+		"use" : "You burn your hand trying to grab the light. That wasn't very smart.",
+		"open" : "That's not how lights work.",
+		"close" : "It is neither open nor openable. What's wrong with you?",
+	},
+	"box" : {
+		"examine" : "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.",
+		"use" : "You have to open it first.",
+		"open" : "You open the box, what's inside?",
+		"close" : "You have to open it first genius.",
+	},
+		"cloth" : {
+		"examine" : "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?",
+		"use" : "You have to open it first.",
+		"open" : "You open the box, what's inside?",
+		"close" : "You have to open it first genius.",
+	},
+}
+
+TestRoom = {##===========================A Room, I will have to standardise all dictionaries to make the Scene function as smooth as possible.
+	"Name" : "the Test Room",
+	"References" : ["room", "area", "surroundings", "zone",],##room should just reference your current location
+	"Description" : "a small and uninteresting room. You don't remember how you got here, or even what this place is but you know it's the beginning of something much larger than you.",
+	"Contents" : {
+		"light" : "a Light",
+		"box" : "a Box",
+		"cloth" : "a piece of Cloth",
+	},
+	"Exits" : ["South",],
+}
+
+def ChangeLocation(oldLocation, newLocation, Character):
+	print("You step out of the " + oldLocation.get("Name") + " and into " + newLocation.get("Name") + ", " + newLocation.get("Description"))
+	Scene(newLocation, Player)
+
+def Scene(Location, Character):##===================This is the active function at all times. Pretty much will have to ave its own rolling dictionary of everything.
+	cmd = input(">>>")
+	
+	if(cmd.lower() == "search"):
+		Search(Location, Player)
+	if(cmd.lower() == "examine"):
+		Examine(Location, Character)
+		
+	if(cmd.lower() == "quit" or cmd.lower() == "exit"):
+		cmd = input("Are you sure you want to quit?")
+		
+		if(cmd.lower() == "y" or cmd.lower() == "yes"):
+			print("Shutting Down...")
+			sys.exit()
+			
+		else:
+			Scene(Location, Character)
+			
+	if(cmd.lower() == "help" or cmd.lower() == "commands"):
+		print("Available Commands:")
+		for c in Commands:
+			print(c)
+		Scene(Location, Character)
+			
+	else:
+		print("Command not recognised.")
+		Scene(Location, Character)
+		
+def Examine(Location, Character):
+	cmd = input("Examine what?>>>")
+
+	for r in Location["References"]:
+		if(cmd.lower() == r):
+			print("You're in " + Location["Description"])
+			Scene(Location, Character)
+			
+		for i in Location["Contents"]:
+			if(cmd.lower() == i):
+				print("It's " + Items[cmd]["examine"])
+				Scene(Location, Character)
+			
+		else:
+			print("There isn't a " + cmd + " here.")
+			Scene(Location, Character)
+
+def Search(Location, Character):##===============The search command. 
+	cmd = input("Search what?>>>")
+	for r in Location["References"]:
+		if(cmd.lower() == r):
+			print("You look around the immediate area. You see: ")
+			
+			for i in Location["Contents"]:
+				print(Location["Contents"][i] + ", ")
+				
+			print("And exits to the:")
+			
+			for x in Location["Exits"]:
+				print(x)
+				
+			Scene(Location, Player)
+
+def boot():##=========================Just the boot screen
+	print("ITER: The Journey.")
+	print("Coming Soon.")
+	print("Type your name to enter the test room.")
+	cmd = input(">>>")
+	Player["Stats"]["Name"] = cmd
+	print("Welcome " + Player["Stats"]["Name"] + ".")
+	ChangeLocation(TestRoom, TestRoom, Player)
+
+boot()##====================the only base level command if at all possible.
