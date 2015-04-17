@@ -1,6 +1,5 @@
 import sys
 
-'''TIME TO MAKE CLASSES INSTEAD'''
 class Person(object):
 	def __init__(self, name, age, health, stamina, focus, hunger, inventory):
 		self.name = name
@@ -92,40 +91,19 @@ TestRoomContents = {
 TestRoomExits = ["south",]
 TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits)
 
+class Item(object):
+	def __init__(self, name, description):
+		self.name = name
+		self.description = description
+		
+	def describeItem(self):
+		print("It's %s" % (self.description))
+
+light = Item("a Light", "a small, dull lightbulb hanging from the ceiling by a thin cord.")
+box = Item("a Box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.")
+cloth = Item("a piece of Cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?")
+
 Commands = ["search", "quit", "go", "examine", "use", "open", "close", "help",]
-
-Items = {
-	"light" : {
-		"examine" : "a small, dull lightbulb hanging from the ceiling by a thin cord.",
-		"use" : "You burn your hand trying to grab the light. That wasn't very smart.",
-		"open" : "That's not how lights work.",
-		"close" : "It is neither open nor openable. What's wrong with you?",
-	},
-	"box" : {
-		"examine" : "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.",
-		"use" : "You have to open it first.",
-		"open" : "You open the box, what's inside?",
-		"close" : "You have to open it first genius.",
-	},
-		"cloth" : {
-		"examine" : "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?",
-		"use" : "You have to open it first.",
-		"open" : "You open the box, what's inside?",
-		"close" : "You have to open it first genius.",
-	},
-}
-
-'''TestRoom = {##===========================A Room, I will have to standardise all dictionaries to make the Scene function as smooth as possible.
-	"Name" : "the Test Room",
-	"References" : ["room", "area", "surroundings", "zone",],##room should just reference your current location
-	"Description" : "a small and uninteresting room. You don't remember how you got here, or even what this place is but you know it's the beginning of something much larger than you.",
-	"Contents" : {
-		"light" : "a Light",
-		"box" : "a Box",
-		"cloth" : "a piece of Cloth",
-	},
-	"Exits" : ["South",],
-}'''
 
 def ChangeLocation(oldLocation, newLocation, Character):
 	print("You step out of the " + oldLocation.name + " and into " + newLocation.name + ", " + newLocation.description)
@@ -148,7 +126,7 @@ def Scene(Location, Character):##===================This is the active function 
 		else:
 			for i in Location.contents:
 				if(cmd.lower() == i):
-					print("Object examine not yet implemented")
+					stringToClass(i).describeItem()
 					Scene(Location, Character)
 			else:
 				for i in Player.inventory:
@@ -226,4 +204,7 @@ def boot():##=========================Just the boot screen
 	print("Welcome %s." % (Player.name))
 	ChangeLocation(TestRoom, TestRoom, Player)
 
+def stringToClass(str):##This is meant to turn strings into class names.
+	return getattr(sys.modules[__name__], str)
+	
 boot()##====================the only base level command if at all possible.
