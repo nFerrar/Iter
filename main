@@ -84,9 +84,9 @@ class Zone(object):
 TestRoomReferences = ["room", "area", "surroundings", "zone",]
 TestRoomDescription = "a small and uninteresting room. You don't remember how you got here, or even what this place is but you know it's the beginning of something much larger than you."
 TestRoomContents = {
-	"light" : "a Light",
-	"box" : "a Box",
-	"cloth" : "a piece of Cloth",
+	"light" : {"a Light" : 1},
+	"box" : {"a Box" : 1},
+	"cloth" : {"a piece of Cloth" : 1},
 	}
 TestRoomExits = ["south",]
 TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits)
@@ -102,8 +102,13 @@ class Item(object):
 light = Item("a Light", "a small, dull lightbulb hanging from the ceiling by a thin cord.")
 box = Item("a Box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.")
 cloth = Item("a piece of Cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?")
+clothing = Item("a simple outfit", "a simple outfit of various materials. It is far from fancy, or comfortable, but it is sufficient.")
+wallet = Item("a small leather Wallet.", "a small and worn wallet made of leather, or maybe fake leather. It smells of dust.")
+shin = Item("a Shin", "a shiny stick of metal and plastic, containing money.")
 
-Commands = ["search", "quit", "go", "examine", "use", "open", "close", "help",]
+##COMMAND CLASS GOES HERE
+
+Commands = ["search", "examine", "inventory", "quit", "help",]
 
 def ChangeLocation(oldLocation, newLocation, Character):
 	print("You step out of the " + oldLocation.name + " and into " + newLocation.name + ", " + newLocation.description)
@@ -127,11 +132,15 @@ def Scene(Location, Character):##===================This is the active function 
 			for i in Location.contents:
 				if(cmd.lower() == i):
 					stringToClass(i).describeItem()
+					if(Location.contents[i] > 1):
+						print("There are " + str(Location.contents[i] + " of them."))
 					Scene(Location, Character)
 			else:
 				for i in Player.inventory:
 					if(cmd.lower() == i):
-						print("Inventory examine not yet implemented.")
+						stringToClass(i).describeItem()
+						if(Player.inventory[i] > 1):
+							print("You are carrying " + str(Player.inventory[i]) + " of them.")
 						Scene(Location, Character)
 				else:
 					print("You don't see a %s here." % (cmd))
