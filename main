@@ -58,8 +58,11 @@ class Zone(object):
 		
 	def searchRoom(self):
 		print("You search the immediate area, and you find:")
-		for c in self.contents:
-			print(self.contents[c])
+		for i in self.contents:
+			if(self.contents[i] == 1):
+				print(stringToClass(i).name)
+			else:
+				print(str(self.contents[i])+ " " + i + "s")
 		print("And exits to the")
 		for x in self.exits:
 			print(x)
@@ -84,9 +87,9 @@ class Zone(object):
 TestRoomReferences = ["room", "area", "surroundings", "zone",]
 TestRoomDescription = "a small and uninteresting room. You don't remember how you got here, or even what this place is but you know it's the beginning of something much larger than you."
 TestRoomContents = {
-	"light" : {"a Light" : 1},
-	"box" : {"a Box" : 1},
-	"cloth" : {"a piece of Cloth" : 1},
+	"light" : 1,
+	"box" : 1,
+	"cloth" : 3,
 	}
 TestRoomExits = ["south",]
 TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits)
@@ -99,15 +102,23 @@ class Item(object):
 	def describeItem(self):
 		print("It's %s" % (self.description))
 
-light = Item("a Light", "a small, dull lightbulb hanging from the ceiling by a thin cord.")
-box = Item("a Box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.")
-cloth = Item("a piece of Cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?")
+light = Item("a light", "a small, dull lightbulb hanging from the ceiling by a thin cord.")
+box = Item("a box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.")
+cloth = Item("a piece of cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?")
 clothing = Item("a simple outfit", "a simple outfit of various materials. It is far from fancy, or comfortable, but it is sufficient.")
 wallet = Item("a small leather Wallet.", "a small and worn wallet made of leather, or maybe fake leather. It smells of dust.")
-shin = Item("a Shin", "a shiny stick of metal and plastic, containing money.")
+shin = Item("a Shin", "a shiny stick of metal and plastic, with an intricate patterns carved up the side. These are what is used as currency when barter will not suffice.")
 
 ##COMMAND CLASS GOES HERE
-
+'''
+class PlayerCommands(object):
+	def __init__(self, Location, Character):
+		self.Location = Location
+		self.Character = Character
+	
+	def search(self, subject):
+'''
+		
 Commands = ["search", "examine", "inventory", "quit", "help",]
 
 def ChangeLocation(oldLocation, newLocation, Character):
@@ -132,8 +143,8 @@ def Scene(Location, Character):##===================This is the active function 
 			for i in Location.contents:
 				if(cmd.lower() == i):
 					stringToClass(i).describeItem()
-					if(Location.contents[i] > 1):
-						print("There are " + str(Location.contents[i] + " of them."))
+					if(Location.contents[i] > 1):## NOT A NUMBER DOOFUS
+						print("There are " + str(Location.contents[i]) + " of them.")
 					Scene(Location, Character)
 			else:
 				for i in Player.inventory:
@@ -170,40 +181,7 @@ def Scene(Location, Character):##===================This is the active function 
 	else:
 		print("Command not recognised.")
 		Scene(Location, Character)
-		
-def Examine(Location, Character):
-	cmd = input("Examine what?>>>")
-
-	for r in Location["References"]:
-		if(cmd.lower() == r):
-			print("You're in " + Location["Description"])
-			Scene(Location, Character)
 			
-		for i in Location["Contents"]:
-			if(cmd.lower() == i):
-				print("It's " + Items[cmd]["examine"])
-				Scene(Location, Character)
-			
-		else:
-			print("There isn't a " + cmd + " here.")
-			Scene(Location, Character)
-
-def Search(Location, Character):##===============The search command. 
-	cmd = input("Search what?>>>")
-	for r in Location["References"]:
-		if(cmd.lower() == r):
-			print("You look around the immediate area. You see: ")
-			
-			for i in Location["Contents"]:
-				print(Location["Contents"][i] + ", ")
-				
-			print("And exits to the:")
-			
-			for x in Location["Exits"]:
-				print(x)
-				
-			Scene(Location, Player)
-
 def boot():##=========================Just the boot screen
 	print("ITER: The Journey.")
 	print("Coming Soon.")
