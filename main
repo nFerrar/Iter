@@ -11,22 +11,21 @@ class Person(object):
 		self.inventory = inventory
 	
 	def addToInventory(self, newItem):
-		for ob in self.inventory:
-			if(ob == newItem):
-				self.inventory.ob += 1
-				break
+		for i in self.inventory:
+			if(newItem == i):
+				self.inventory[i] += 1
 		
 		else:
-			self.inventory.append(newItem)
+			self.inventory[newItem] = 1
 			
-	def removeFromInventory(item):
-		for ob in self.inventory:
-			if(ob == item):
-				self.inventory.remove(item)
+	def removeFromInventory(self, item):
+		for i in self.inventory:
+			if(item == i):
+				del self.inventory[i]
 				break
 		
 		else:
-			print("You don't have a %s." % (str(item)))
+			print("You're not carrying a %s." % (str(item)))
 	
 class PC(Person):
 	def checkInventory(self):
@@ -46,6 +45,7 @@ pInv = {
 Player = PC("Dickbutt", 23, 100, 100, 100, 100, pInv)
 
 class Zone(object):
+
 	def __init__(self, name, references, description, contents, exits):
 		self.name = name
 		self.references = references
@@ -73,16 +73,13 @@ class Zone(object):
 				self.contents[i] += 1
 		
 		else:
-			self.contents.append(item)
+			self.contents[item] = 1
 	
 	def removeItem(self, item):
 		for i in self.contents:
-			if(item == i):
-				self.contents.remove(i)
-		
-		else:
-			print("There isn't a %s here." % (str(item)))
-
+			if(i == item):
+				del self.contents[i]
+				break
 			
 TestRoomReferences = ["room", "area", "surroundings", "zone",]
 TestRoomDescription = "a small and uninteresting room. You don't remember how you got here, or even what this place is but you know it's the beginning of something much larger than you."
@@ -91,47 +88,101 @@ TestRoomContents = {
 	"box" : 1,
 	"cloth" : 3,
 	}
-TestRoomExits = ["south",]
+TestRoomExits = {
+	"south" : "TestHall",
+	}
 TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits)
 
+TestHallReferences = ["room", "hall", "corridor", "area", "zone", "surroundings",]
+TestHallDescription = "a long, seemingly endless hallway. No matter how far you walk down it's length the door you cam in through is always right behind you."
+TestHallContents = {
+	"cloth" : 1,
+	}
+
+TestHallExits = {
+	"north" : "TestRoom",
+	}
+
+TestHall = Zone("Test Hall", TestHallReferences, TestHallDescription, TestHallContents, TestHallExits)
+
 class Item(object):
-	def __init__(self, name, description):
+	
+	def __init__(self, name, description, bPickUp):
 		self.name = name
 		self.description = description
+		self.bPickUp = bPickUp
 		
 	def describeItem(self):
 		print("It's %s" % (self.description))
 
-light = Item("a light", "a small, dull lightbulb hanging from the ceiling by a thin cord.")
-box = Item("a box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.")
-cloth = Item("a piece of cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?")
-clothing = Item("a simple outfit", "a simple outfit of various materials. It is far from fancy, or comfortable, but it is sufficient.")
-wallet = Item("a small leather Wallet.", "a small and worn wallet made of leather, or maybe fake leather. It smells of dust.")
-shin = Item("a Shin", "a shiny stick of metal and plastic, with an intricate patterns carved up the side. These are what is used as currency when barter will not suffice.")
-
-##COMMAND CLASS GOES HERE
-'''
-class PlayerCommands(object):
-	def __init__(self, Location, Character):
-		self.Location = Location
-		self.Character = Character
+class Container(Item):
 	
-	def search(self, subject):
-'''
+	tempD = {}
+
+	def __init__(self, name, description, bPickUp, openDescription, contents, openText, closeText, bOpen):
+		self.name = name
+		self.description = description
+		self.bPickUp = bPickUp
+		self.openDescription  = openDescription
+		self.contents = contents
+		self.openText = openText
+		self.closeText = closeText
+		self.bOpen = bOpen
 		
-Commands = ["search", "examine", "inventory", "quit", "help",]
-
-def ChangeLocation(oldLocation, newLocation, Character):
-	print("You step out of the " + oldLocation.name + " and into " + newLocation.name + ", " + newLocation.description)
-	Scene(newLocation, Player)
-
-def Scene(Location, Character):##===================This is the active function at all times. Pretty much will have to ave its own rolling dictionary of everything.
-	cmd = input(">>>")
+	def describeItem(self):
+		if(self.bOpen == False):
+			print("It's %s" % (self.description))
+		else:
+			print("It's %s" % (self.openDescription))
 	
-	if(cmd.lower() == "search"):
+	def openContainer(self, Location, Character):
+		self.bOpen = True
+		print(self.openText + " Inside you see")
+		for i in self.contents:
+			if(self.contents[i] > 1):
+				print(str(self.contents[i]) + " " + i)
+				Location.addItem(i)
+			else:
+				print(i)
+				Location.addItem(i)
+				
+	def closeContainer(self, Location, Character):
+		self.bOpen = False
+		print(self.closeText)
+		for i in self.contents:
+			for x in Location.contents:
+				if(i == x):
+					self.tempD[i] = Location.contents[x]
+					Location.removeItem(x)
+					break
+		self.contents = self.tempD
+		self.tempD = {}
+
+		
+itemList = ["light", "box", "cloth", "clothing", "wallet", "shin", "key",]
+
+light = Item("a light", "a small, dull light bulb hanging from the ceiling by a thin cord.", False)
+
+boxContents = {
+	"key" : 1,
+	}
+
+box = Container("a box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.", False, "an open wooden box, emanating a musty small from it's dark interior.", boxContents, "As you slowly open the box it's hinges give a protesting groan and despite your gentle motions you are surrounded by a plume of dust which slowly settles to the floor.", "You close the box with a creak.", False)
+cloth = Item("a piece of cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?", True)
+clothing = Item("simple clothing", "a simple outfit of various materials. It is far from fancy, or comfortable, but it is sufficient.", True)
+wallet = Item("a small leather wallet", "a small and worn wallet made of leather, or maybe fake leather. It smells of dust.", True)
+shin = Item("a shin", "a shiny stick of metal and plastic, with an intricate patterns carved up the side. These are what is used as currency when barter will not suffice.", True)
+key = Item("a small key", "a small tarnished key of silver. it looks as though it hasn't been touched in  very long time.", True)
+
+class PlayerCommands(object):##These are all the commands the player can perform, they are as dynamic as possible.
+	def __init__(self):
+		pass
+	
+	def search(self, Location, Character):##Search the area, makes the Zone print its contents
 		Location.searchRoom()
 		Scene(Location, Character)
-	if(cmd.lower() == "examine"):
+	
+	def examine(self, Location, Character):##Examines the area, makes the Zone print its description
 		cmd = input("Examine what? >>>")
 		
 		for i in Location.references:
@@ -143,7 +194,7 @@ def Scene(Location, Character):##===================This is the active function 
 			for i in Location.contents:
 				if(cmd.lower() == i):
 					stringToClass(i).describeItem()
-					if(Location.contents[i] > 1):## NOT A NUMBER DOOFUS
+					if(Location.contents[i] > 1):
 						print("There are " + str(Location.contents[i]) + " of them.")
 					Scene(Location, Character)
 			else:
@@ -156,9 +207,12 @@ def Scene(Location, Character):##===================This is the active function 
 				else:
 					print("You don't see a %s here." % (cmd))
 					Scene(Location, Character)
-				
+	
+	def inventory(self, Location, Character):##Checks the players Inventory, printing its contents
+		Player.checkInventory()
+		Scene(Location, Character)
 		
-	if(cmd.lower() == "quit" or cmd.lower() == "exit"):
+	def quit(self, Location, Character):##lets you quit, has a confirmation. NO SAVE BITCHES. YOLO
 		cmd = input("Are you sure you want to quit?")
 		
 		if(cmd.lower() == "y" or cmd.lower() == "yes"):
@@ -167,16 +221,106 @@ def Scene(Location, Character):##===================This is the active function 
 			
 		else:
 			Scene(Location, Character)
-	
-	if(cmd.lower() == "inventory" or cmd.lower() == "inv"):
-		Player.checkInventory()
-		Scene(Location, Character)
-			
-	if(cmd.lower() == "help" or cmd.lower() == "commands"):
+		
+	def help(self, Location, Character):##siply prints all the commands, no descriptions for you
 		print("Available Commands:")
 		for c in Commands:
 			print(c)
 		Scene(Location, Character)
+		
+	def open(self, Location, Character):##used to open Container class items. toggles variables
+		cmd = input("Open what? >>>")
+		
+		for i in itemList:
+			if(i == cmd.lower()):
+				if hasattr(stringToClass(cmd), "bOpen"):
+					if(stringToClass(cmd).bOpen == False):
+						stringToClass(cmd).openContainer(Location, Character)
+						Scene(Location, Character)
+					else:
+						print("It's already open.")
+						Scene(Location, Character)
+						
+				else:
+					print("You can't open that.")
+					Scene(Location, Character)
+		else:
+			print("You don't see a %s here." % (cmd))
+			Scene(Location, Character)
+		
+	def close(self, Location, Character):##used to close open Containers. toggles variables and re-checks contents in case of deletion.
+		cmd = input("Close what? >>>")
+		
+		for i in itemList:
+			if(i == cmd.lower()):
+				if hasattr(stringToClass(cmd), "bOpen"):
+					if(stringToClass(cmd).bOpen == True):
+						stringToClass(cmd).closeContainer(Location, Character)
+						Scene(Location, Character)
+					else:
+						print("It's already closed.")
+						Scene(Location, Character)
+				else:
+					print("You can't close that.")
+					Scene(Location, Character)
+		else:
+			print("You don't see a %s here." % (cmd))
+			Scene(Location, Character)
+
+	def take(self, Location, Character):##lets the player pick up Items marked as pickupable.
+		cmd = input("What would you like to pick up? >>>")
+		
+		for l in Location.contents:
+			if(l == cmd.lower()):
+				if(stringToClass(cmd.lower()).bPickUp == True):
+					Character.addToInventory(cmd)
+					Location.removeItem(cmd)
+					print("You pick up the %s." % (l))
+					Scene(Location, Character)
+				else:
+					print("You can't pick that up.")
+					Scene(Location, Character)
+		else:
+			print("There isn't a %s here." % (cmd))
+			Scene(Location, Character)
+			
+	def drop(self, Location, Character):##drops an item from the inventory to the zone. will go back into a container it came from
+		cmd = input("What do you want to drop? >>>")
+		
+		for l in Character.inventory:
+			if(l == cmd.lower()):
+				Character.removeFromInventory(cmd)
+				Location.addItem(cmd)
+				print("You drop the %s." % (l))
+				Scene(Location, Character)
+		else:
+			print("You're not carrying a %s." % (cmd))
+			Scene(Location, Character)
+			
+	def move(self, Location, Character):##moves the character from one location to another.
+		cmd = input("Which direction do you want to go? >>>")
+		
+		for d in Location.exits:
+			if(d == cmd.lower()):
+				ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
+				break
+		else:
+			print("You cannot go that way.")
+			Scene(Location, Character)
+
+Commands = ["search", "examine", "inventory", "quit", "help", "open", "close", "take", "drop", "move",]
+playerCommand = PlayerCommands()
+
+def ChangeLocation(oldLocation, newLocation, Character):##This moves the player from oldLocation to newLocation. Moves the character class to maintain inventory and stats.
+	print("You step out of the " + oldLocation.name + " and into " + newLocation.name + ", " + newLocation.description)
+	Scene(newLocation, Player)
+
+def Scene(Location, Character):##====This is the current scene. All commands and events should come back to this.
+	cmd = input(">>>")
+	
+	for i in Commands:
+		if(cmd == i):
+			stingToClassDef(playerCommand, cmd)(Location, Character)## This is where all player input is passed to the relevent command
 			
 	else:
 		print("Command not recognised.")
@@ -193,5 +337,8 @@ def boot():##=========================Just the boot screen
 
 def stringToClass(str):##This is meant to turn strings into class names.
 	return getattr(sys.modules[__name__], str)
+
+def stingToClassDef(className, defName):##This takes strings and makes them a def name within a class. className.defName is the result. can be handed arguments
+	return getattr(className, defName)
 	
 boot()##====================the only base level command if at all possible.
