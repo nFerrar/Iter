@@ -40,11 +40,11 @@ Add locked travel between rooms (NIC!: add argument to zones: bBlocked and "Key 
 
 Add events to rooms, triggers to include:
 
-  entry and exit
+- entry and exit
   
-  inventory changes
+- inventory changes
   
-  more?
+- more?
   
 Add other characters who can be talked to/have items given/taken (fetch quests, away!)
 
