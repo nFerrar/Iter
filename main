@@ -46,12 +46,18 @@ Player = PC("Dickbutt", 23, 100, 100, 100, 100, pInv)
 
 class Zone(object):
 
-	def __init__(self, name, references, description, contents, exits):
+	def __init__(self, name, references, description, contents, exits, bLocked, keyItem, blockedText, unlockText, bDestroyKey, keyDestroyText):
 		self.name = name
 		self.references = references
 		self.description = description
 		self.contents = contents
 		self.exits = exits
+		self.bLocked = bLocked
+		self.keyItem = keyItem
+		self.blockedText = blockedText
+		self.unlockText = unlockText
+		self.bDestroyKey = bDestroyKey
+		self.keyDestroyText = keyDestroyText
 		
 	def examineRoom(self):
 		print("You are in a " + self.description)
@@ -91,10 +97,10 @@ TestRoomContents = {
 TestRoomExits = {
 	"south" : "TestHall",
 	}
-TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits)
+TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits, False, "none", "Not Locked, this is an error.", "Wasn't locked, this is an error.", False, "No key item, this is an error.")
 
 TestHallReferences = ["room", "hall", "corridor", "area", "zone", "surroundings",]
-TestHallDescription = "a long, seemingly endless hallway. No matter how far you walk down it's length the door you cam in through is always right behind you."
+TestHallDescription = "a long, seemingly endless hallway. No matter how far you walk down it's length the door you came in through is always right behind you."
 TestHallContents = {
 	"cloth" : 1,
 	}
@@ -103,7 +109,7 @@ TestHallExits = {
 	"north" : "TestRoom",
 	}
 
-TestHall = Zone("Test Hall", TestHallReferences, TestHallDescription, TestHallContents, TestHallExits)
+TestHall = Zone("Test Hall", TestHallReferences, TestHallDescription, TestHallContents, TestHallExits, True, "key", "A heavy wooden door bars your way. A small tarnished keyhole stares at you defiantly.", "With a dry click the key turns in the lock and the door swings open with an eerie creak.", True, "As you attempt the retrieve the key from the lock it surrenders to the ravages of time, snapping off with a gentle clang. You won't be getting that back.")
 
 class Item(object):
 	
@@ -302,8 +308,27 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		
 		for d in Location.exits:
 			if(d == cmd.lower()):
-				ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
-				break
+				if(stringToClass(Location.exits[d]).bLocked == False):
+					ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
+					break
+				else:
+					for k in Character.inventory:
+						if(k == stringToClass(Location.exits[d]).keyItem):
+							stringToClass(Location.exits[d]).bLocked = False
+							print(stringToClass(Location.exits[d]).unlockText)
+						
+							if(stringToClass(Location.exits[d]).bDestroyKey == False):
+								ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
+								break
+							else:
+								print(stringToClass(Location.exits[d]).keyDestroyText)
+								Character.removeFromInventory(stringToClass(Location.exits[d]).keyItem)
+								ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
+								break
+					else:
+						print(stringToClass(Location.exits[d]).blockedText)
+						Scene(Location, Character)
+						break
 		else:
 			print("You cannot go that way.")
 			Scene(Location, Character)
