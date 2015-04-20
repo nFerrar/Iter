@@ -211,7 +211,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 							print("You are carrying " + str(Player.inventory[i]) + " of them.")
 						Scene(Location, Character)
 				else:
-					print("You don't see a %s here." % (cmd))
+					print("You don't see a %s here." % (cmd.lower()))
 					Scene(Location, Character)
 	
 	def inventory(self, Location, Character):##Checks the players Inventory, printing its contents
@@ -239,9 +239,9 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		
 		for i in itemList:
 			if(i == cmd.lower()):
-				if hasattr(stringToClass(cmd), "bOpen"):
-					if(stringToClass(cmd).bOpen == False):
-						stringToClass(cmd).openContainer(Location, Character)
+				if hasattr(stringToClass(cmd.lower()), "bOpen"):
+					if(stringToClass(cmd.lower()).bOpen == False):
+						stringToClass(cmd.lower()).openContainer(Location, Character)
 						Scene(Location, Character)
 					else:
 						print("It's already open.")
@@ -251,7 +251,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					print("You can't open that.")
 					Scene(Location, Character)
 		else:
-			print("You don't see a %s here." % (cmd))
+			print("You don't see a %s here." % (cmd.lower()))
 			Scene(Location, Character)
 		
 	def close(self, Location, Character):##used to close open Containers. toggles variables and re-checks contents in case of deletion.
@@ -259,9 +259,9 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		
 		for i in itemList:
 			if(i == cmd.lower()):
-				if hasattr(stringToClass(cmd), "bOpen"):
-					if(stringToClass(cmd).bOpen == True):
-						stringToClass(cmd).closeContainer(Location, Character)
+				if hasattr(stringToClass(cmd.lower()), "bOpen"):
+					if(stringToClass(cmd.lower()).bOpen == True):
+						stringToClass(cmd.lower()).closeContainer(Location, Character)
 						Scene(Location, Character)
 					else:
 						print("It's already closed.")
@@ -270,7 +270,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					print("You can't close that.")
 					Scene(Location, Character)
 		else:
-			print("You don't see a %s here." % (cmd))
+			print("You don't see a %s here." % (cmd.lower()))
 			Scene(Location, Character)
 
 	def take(self, Location, Character):##lets the player pick up Items marked as pickupable.
@@ -279,15 +279,15 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		for l in Location.contents:
 			if(l == cmd.lower()):
 				if(stringToClass(cmd.lower()).bPickUp == True):
-					Character.addToInventory(cmd)
-					Location.removeItem(cmd)
+					Character.addToInventory(cmd.lower())
+					Location.removeItem(cmd.lower())
 					print("You pick up the %s." % (l))
 					Scene(Location, Character)
 				else:
 					print("You can't pick that up.")
 					Scene(Location, Character)
 		else:
-			print("There isn't a %s here." % (cmd))
+			print("There isn't a %s here." % (cmd.lower()))
 			Scene(Location, Character)
 			
 	def drop(self, Location, Character):##drops an item from the inventory to the zone. will go back into a container it came from
@@ -295,12 +295,12 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		
 		for l in Character.inventory:
 			if(l == cmd.lower()):
-				Character.removeFromInventory(cmd)
-				Location.addItem(cmd)
+				Character.removeFromInventory(cmd.lower())
+				Location.addItem(cmd.lower())
 				print("You drop the %s." % (l))
 				Scene(Location, Character)
 		else:
-			print("You're not carrying a %s." % (cmd))
+			print("You're not carrying a %s." % (cmd.lower()))
 			Scene(Location, Character)
 			
 	def move(self, Location, Character):##moves the character from one location to another.
@@ -344,8 +344,8 @@ def Scene(Location, Character):##====This is the current scene. All commands and
 	cmd = input(">>>")
 	
 	for i in Commands:
-		if(cmd == i):
-			stingToClassDef(playerCommand, cmd)(Location, Character)## This is where all player input is passed to the relevent command
+		if(cmd.lower() == i):
+			stingToClassDef(playerCommand, cmd.lower())(Location, Character)## This is where all player input is passed to the relevent command
 			
 	else:
 		print("Command not recognised.")
