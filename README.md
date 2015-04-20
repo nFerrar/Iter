@@ -27,6 +27,9 @@ quit - quits from the game, no save function yet/ever. yolo
 
 help - lists the available commands, without description. GLHF
 
+# Features:
+Zones can be marked as locked and require a specific item to be accessed, with the option of destroying the item upon entry, complete with flavour text.
+
 # Known Bugs
 
 Currently any picking up or putting down disregards item quantity
@@ -35,8 +38,6 @@ Not all input has had lower() and as such capitalisation can ruin everything.
 
 # To do, in something resembling an order of priority:
 Fix item quantity isues
-
-Add locked travel between rooms (NIC!: add argument to zones: bBlocked and "Key Item", maybe an unlock command or extend the open command, also with some text explaining what is topping travel (door, rock)
 
 Use command, this will be difficult to keep flexible/simple.
 
