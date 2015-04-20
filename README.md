@@ -36,7 +36,9 @@ Not all input has had lower() and as such capitalisation can ruin everything.
 # To do, in something resembling an order of priority:
 Fix item quantity isues
 
-Add locked travel between rooms (NIC!: add argument to zones: bBlocked and "Key Item", maybe an unlock command or extend the open command
+Add locked travel between rooms (NIC!: add argument to zones: bBlocked and "Key Item", maybe an unlock command or extend the open command, also with some text explaining what is topping travel (door, rock)
+
+Use command, this will be difficult to keep flexible/simple.
 
 Add events to rooms, triggers to include:
 
