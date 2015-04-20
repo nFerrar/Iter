@@ -34,8 +34,6 @@ Zones can be marked as locked and require a specific item to be accessed, with t
 
 Currently any picking up or putting down disregards item quantity
 
-Not all input has had lower() and as such capitalisation can ruin everything.
-
 # To do, in something resembling an order of priority:
 Fix item quantity isues
 
