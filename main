@@ -1,28 +1,27 @@
 import sys
 
 class Person(object):
-	def __init__(self, name, age, health, stamina, focus, hunger, inventory):
+	def __init__(self, name, inventory):
 		self.name = name
-		self.age = age
-		self.health = health
-		self.stamina = stamina
-		self.focus = focus
-		self.hunger = hunger
 		self.inventory = inventory
 	
-	def addToInventory(self, newItem):
+	def addToInventory(self, newItem, quantity):
 		for i in self.inventory:
 			if(newItem == i):
-				self.inventory[i] += 1
+				self.inventory[i] += quantity
 		
 		else:
-			self.inventory[newItem] = 1
+			self.inventory[newItem] = quantity
 			
-	def removeFromInventory(self, item):
+	def removeFromInventory(self, item, quantity):
 		for i in self.inventory:
 			if(item == i):
-				del self.inventory[i]
-				break
+				if(self.inventory[i] > 1):
+					self.inventory[i] -= quantity
+					break
+				else:
+					del self.inventory[i]
+					break
 		
 		else:
 			print("You're not carrying a %s." % (str(item)))
@@ -42,7 +41,7 @@ pInv = {
 		"wallet" : 1,
 		"shin" : 30,
 		}
-Player = PC("Dickbutt", 23, 100, 100, 100, 100, pInv)
+Player = PC("Dickbutt", pInv)
 
 class Zone(object):
 
@@ -73,19 +72,23 @@ class Zone(object):
 		for x in self.exits:
 			print(x)
 				
-	def addItem(self, item):
+	def addItem(self, item, quantity):
 		for i in self.contents:
 			if(item == i):
-				self.contents[i] += 1
+				self.contents[i] += quantity
 		
 		else:
-			self.contents[item] = 1
+			self.contents[item] = quantity
 	
-	def removeItem(self, item):
+	def removeItem(self, item, quantity):
 		for i in self.contents:
 			if(i == item):
-				del self.contents[i]
-				break
+				if(self.contents[i] > 1):
+					self.contents[i] -= quantity
+					break
+				else:
+					del self.contents[i]
+					break
 			
 TestRoomReferences = ["room", "area", "surroundings", "zone",]
 TestRoomDescription = "a small and uninteresting room. You don't remember how you got here, or even what this place is but you know it's the beginning of something much larger than you."
@@ -147,10 +150,10 @@ class Container(Item):
 		for i in self.contents:
 			if(self.contents[i] > 1):
 				print(str(self.contents[i]) + " " + i)
-				Location.addItem(i)
+				Location.addItem(i, self.contents[i])
 			else:
 				print(i)
-				Location.addItem(i)
+				Location.addItem(i, self.contents[i])
 				
 	def closeContainer(self, Location, Character):
 		self.bOpen = False
@@ -159,7 +162,7 @@ class Container(Item):
 			for x in Location.contents:
 				if(i == x):
 					self.tempD[i] = Location.contents[x]
-					Location.removeItem(x)
+					Location.removeItem(x, self.contents[i])
 					break
 		self.contents = self.tempD
 		self.tempD = {}
@@ -171,6 +174,7 @@ light = Item("a light", "a small, dull light bulb hanging from the ceiling by a 
 
 boxContents = {
 	"key" : 1,
+	"cloth" : 5,
 	}
 
 box = Container("a box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.", False, "an open wooden box, emanating a musty small from it's dark interior.", boxContents, "As you slowly open the box it's hinges give a protesting groan and despite your gentle motions you are surrounded by a plume of dust which slowly settles to the floor.", "You close the box with a creak.", False)
@@ -279,7 +283,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		for l in Location.contents:
 			if(l == cmd.lower()):
 				if(stringToClass(cmd.lower()).bPickUp == True):
-					Character.addToInventory(cmd.lower())
+					Character.addToInventory(cmd.lower(), Location.contents[cmd.lower()])
 					Location.removeItem(cmd.lower())
 					print("You pick up the %s." % (l))
 					Scene(Location, Character)
@@ -296,7 +300,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		for l in Character.inventory:
 			if(l == cmd.lower()):
 				Character.removeFromInventory(cmd.lower())
-				Location.addItem(cmd.lower())
+				Location.addItem(cmd.lower(), Character.inventory[cmd.lower()])
 				print("You drop the %s." % (l))
 				Scene(Location, Character)
 		else:
