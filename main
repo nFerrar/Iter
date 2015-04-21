@@ -8,16 +8,17 @@ class Person(object):
 	def addToInventory(self, newItem, quantity):
 		for i in self.inventory:
 			if(newItem == i):
-				self.inventory[i] += quantity
-		
-		else:
-			self.inventory[newItem] = quantity
+				self.inventory[i] = self.inventory[i] + quantity
+				break
+			else:
+				self.inventory[newItem] = quantity
+				break
 			
 	def removeFromInventory(self, item, quantity):
 		for i in self.inventory:
 			if(item == i):
-				if(self.inventory[i] > 1):
-					self.inventory[i] -= quantity
+				if(self.inventory[i] > quantity):
+					self.inventory[i] = self.inventory[i] - quantity
 					break
 				else:
 					del self.inventory[i]
@@ -75,16 +76,17 @@ class Zone(object):
 	def addItem(self, item, quantity):
 		for i in self.contents:
 			if(item == i):
-				self.contents[i] += quantity
-		
-		else:
-			self.contents[item] = quantity
+				self.contents[i] = self.contents[i] + quantity
+				break		
+			else:
+				self.contents[item] = quantity
+				break
 	
 	def removeItem(self, item, quantity):
 		for i in self.contents:
 			if(i == item):
-				if(self.contents[i] > 1):
-					self.contents[i] -= quantity
+				if(self.contents[i] > quantity):
+					self.contents[i] = self.contents[i] - quantity
 					break
 				else:
 					del self.contents[i]
@@ -153,7 +155,7 @@ class Container(Item):
 				Location.addItem(i, self.contents[i])
 			else:
 				print(i)
-				Location.addItem(i, self.contents[i])
+				Location.addItem(i, 1)
 				
 	def closeContainer(self, Location, Character):
 		self.bOpen = False
@@ -284,7 +286,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 			if(l == cmd.lower()):
 				if(stringToClass(cmd.lower()).bPickUp == True):
 					Character.addToInventory(cmd.lower(), Location.contents[cmd.lower()])
-					Location.removeItem(cmd.lower())
+					Location.removeItem(cmd.lower(), Location.contents[cmd.lower()])
 					print("You pick up the %s." % (l))
 					Scene(Location, Character)
 				else:
@@ -299,10 +301,15 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		
 		for l in Character.inventory:
 			if(l == cmd.lower()):
-				Character.removeFromInventory(cmd.lower())
-				Location.addItem(cmd.lower(), Character.inventory[cmd.lower()])
-				print("You drop the %s." % (l))
-				Scene(Location, Character)
+				q = input("Drop how many? >>>")
+				if(int(q) <= Character.inventory[cmd.lower()]):
+					Character.removeFromInventory(cmd.lower(), int(q))
+					Location.addItem(cmd.lower(), int(q))
+					print("You drop the %s." % (l))
+					Scene(Location, Character)
+				else:
+					print("You don't have that many " + cmd.lower() +"s.")
+					Scene(Location, Character)
 		else:
 			print("You're not carrying a %s." % (cmd.lower()))
 			Scene(Location, Character)
@@ -326,7 +333,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 								break
 							else:
 								print(stringToClass(Location.exits[d]).keyDestroyText)
-								Character.removeFromInventory(stringToClass(Location.exits[d]).keyItem)
+								Character.removeFromInventory(stringToClass(Location.exits[d]).keyItem, 1)
 								ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
 								break
 					else:
