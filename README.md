@@ -1,9 +1,8 @@
 # Iter
 A text adventure written in Python. Because I can.
 
-Ideally this game will be very very easy to modify. I want to write the solid engine first and them from there make a game.
+Conceptually, the idea of this little engine is flexibility through simplicity. Ideally anyone could grab this base engine and write their own little story driven adventure, or make a world to explore, even without Python experience.
 
-I'll note some structure later, along with actually commenting my code.
 Some commenting has been done, and current build supports the following commands and mechanics
 
 # Player Commands
@@ -32,11 +31,9 @@ Zones can be marked as locked and require a specific item to be accessed, with t
 
 # Known Bugs
 
-Currently any picking up or putting down disregards item quantity
+Possible shenanigans with containers and their contents spilling into the zone.
 
 # To do, in something resembling an order of priority:
-Fix item quantity isues
-
 Use command, this will be difficult to keep flexible/simple.
 
 Add events to rooms, triggers to include:
