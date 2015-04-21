@@ -44,7 +44,9 @@ Zones can be marked as locked and require a specific item to be accessed, with t
 Possible shenanigans with containers and their contents spilling into the zone.
 
 # To do, in something resembling an order of priority:
-Use command, this will be difficult to keep flexible/simple.
+still some quantity issues
+
+Finish theUse command, this will be difficult to keep flexible/simple. Will probably tie into the Event system.
 
 Add events to rooms, triggers to include:
 
