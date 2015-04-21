@@ -118,10 +118,14 @@ TestHall = Zone("Test Hall", TestHallReferences, TestHallDescription, TestHallCo
 
 class Item(object):
 	
-	def __init__(self, name, description, bPickUp):
+	def __init__(self, name, description, bPickUp, bUseable, bUseAlone, useWith, useText):
 		self.name = name
 		self.description = description
 		self.bPickUp = bPickUp
+		self.bUseable = bUseable
+		self.bUseAlone = bUseAlone
+		self.useWith = useWith
+		self.useText = useText
 		
 	def describeItem(self):
 		print("It's %s" % (self.description))
@@ -130,7 +134,7 @@ class Container(Item):
 	
 	tempD = {}
 
-	def __init__(self, name, description, bPickUp, openDescription, contents, openText, closeText, bOpen):
+	def __init__(self, name, description, bPickUp, openDescription, contents, openText, closeText, bOpen, bUseable, bUseAlone, useWith, useText):
 		self.name = name
 		self.description = description
 		self.bPickUp = bPickUp
@@ -139,6 +143,10 @@ class Container(Item):
 		self.openText = openText
 		self.closeText = closeText
 		self.bOpen = bOpen
+		self.bUseable = bUseable
+		self.bUseAlone = bUseAlone
+		self.useWith = useWith
+		self.useText = useText
 		
 	def describeItem(self):
 		if(self.bOpen == False):
@@ -172,19 +180,19 @@ class Container(Item):
 		
 itemList = ["light", "box", "cloth", "clothing", "wallet", "shin", "key",]
 
-light = Item("a light", "a small, dull light bulb hanging from the ceiling by a thin cord.", False)
+light = Item("a light", "a small, dull light bulb hanging from the ceiling by a thin cord.", False, True, True, "none, error", "You burn your hand as you try to touch the light. That wasn't very clever.")
 
 boxContents = {
 	"key" : 1,
 	"cloth" : 5,
 	}
 
-box = Container("a box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.", False, "an open wooden box, emanating a musty small from it's dark interior.", boxContents, "As you slowly open the box it's hinges give a protesting groan and despite your gentle motions you are surrounded by a plume of dust which slowly settles to the floor.", "You close the box with a creak.", False)
-cloth = Item("a piece of cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?", True)
-clothing = Item("simple clothing", "a simple outfit of various materials. It is far from fancy, or comfortable, but it is sufficient.", True)
-wallet = Item("a small leather wallet", "a small and worn wallet made of leather, or maybe fake leather. It smells of dust.", True)
-shin = Item("a shin", "a shiny stick of metal and plastic, with an intricate patterns carved up the side. These are what is used as currency when barter will not suffice.", True)
-key = Item("a small key", "a small tarnished key of silver. it looks as though it hasn't been touched in  very long time.", True)
+box = Container("a box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.", False, "an open wooden box, emanating a musty small from it's dark interior.", boxContents, "As you slowly open the box it's hinges give a protesting groan and despite your gentle motions you are surrounded by a plume of dust which slowly settles to the floor.", "You close the box with a creak.", False, False, False, "None, error", "none, error")
+cloth = Item("a piece of cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?", True, True, False, "cloth", "You tie two pieces of cloth together and marvel at your work. It comes apart in your hand shortly after.")
+clothing = Item("simple clothing", "a simple outfit of various materials. It is far from fancy, or comfortable, but it is sufficient.", True, False, False, "none error", "none error")
+wallet = Item("a small leather wallet", "a small and worn wallet made of leather, or maybe fake leather. It smells of dust.", True, False, False, "none error", "none error")
+shin = Item("a shin", "a shiny stick of metal and plastic, with an intricate patterns carved up the side. These are what is used as currency when barter will not suffice.", True, False, False, "none error", "none error")
+key = Item("a small key", "a small tarnished key of silver. it looks as though it hasn't been touched in  very long time.", True, False, False, "none error", "none error")
 
 class PlayerCommands(object):##These are all the commands the player can perform, they are as dynamic as possible.
 	def __init__(self):
@@ -343,8 +351,76 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		else:
 			print("You cannot go that way.")
 			Scene(Location, Character)
+	
+	def use(self, Location, Character):
+		cmd = input("Use what? >>>")
+		
+		for i in Character.inventory:
+			if(cmd.lower() == i):
+				if(stringToClass(cmd.lower()).bUseable == True):
+					if(stringToClass(cmd.lower()).bUseAlone == True):
+						print(stringToClass(cmd.lower()).useText)
+						Scene(Location, Character)
+					else:
+						u = input("Use with what? >>>")
+						for x in Character.inventory:
+							if(u.lower() == x):
+								if(stringToClass(cmd.lower()).useWith == x):
+									print(stringToClass(cmd.lower()).useText)
+									Scene(Location, Character)
+								else:
+									print("You can't use those together.")
+									Scene(Location, Character)
+						for x in Location.contents:
+							if(u.lower() == x):
+								if(stringToClass(cmd.lower()).useWith == x):
+									print(stringToClass(cmd.lower()).useText)
+									Scene(Location, Character)
+								else:
+									print("You can't use those together.")
+									Scene(Location, Character)
+							else:
+								print("There isn't a %s here.383" % (u))
+								Scene(Location, Character)
+				else:
+					print("You can't use that.")
+					Scene(Location, Character)
+					
+		for i in Location.contents:
+			if(cmd.lower() == i):
+				if(stringToClass(cmd.lower()).bUseable == True):
+					if(stringToClass(cmd.lower()).bUseAlone == True):
+						print(stringToClass(cmd.lower()).useText)
+						Scene(Location, Character)
+					else:
+						u = input("Use with what? >>>")
+						for x in Character.inventory:
+							if(u.lower() == x):
+								if(stringToClass(cmd.lower()).useWith == x):
+									print(stringToClass(cmd.lower()).useText)
+									Scene(Location, Character)
+								else:
+									print("You can't use those together.")
+									Scene(Location, Character)
+						for x in Location.contents:
+							if(u.lower() == x):
+								if(stringToClass(cmd.lower()).useWith == x):
+									print(stringToClass(cmd.lower()).useText)
+									Scene(Location, Character)
+								else:
+									print("You can't use those together.")
+									Scene(Location, Character)
+							else:
+								print("There isn't a %s here.414" % (u))
+								Scene(Location, Character)
+				else:
+					print("You can't use that.")
+					Scene(Location, Character)
+		else:
+			print("There isn't a %s here.420" % (cmd.lower()))
+			Scene(Location, Character)
 
-Commands = ["search", "examine", "inventory", "quit", "help", "open", "close", "take", "drop", "move",]
+Commands = ["search", "examine", "inventory", "quit", "help", "open", "close", "take", "drop", "move", "use",]
 playerCommand = PlayerCommands()
 
 def ChangeLocation(oldLocation, newLocation, Character):##This moves the player from oldLocation to newLocation. Moves the character class to maintain inventory and stats.
