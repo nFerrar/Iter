@@ -237,7 +237,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		
 		if(cmd.lower() == "y" or cmd.lower() == "yes"):
 			print("Shutting Down...")
-			sys.exit()
+			exit()
 			
 		else:
 			Scene(Location, Character)
