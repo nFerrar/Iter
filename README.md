@@ -39,22 +39,23 @@ help
 # Features:
 Zones can be marked as locked and require a specific item to be accessed, with the option of destroying the item upon entry, complete with flavour text.
 
+Events System! Items and zones can have Evens tagged to them, which can be triggered by actions such as:
+- Searching
+- examining
+- useing
+- picking up
+- dropping
+and they can be limited to running once or infinitly. Numbered runnin still to come.
+
 # Known Bugs
 
 Possible shenanigans with containers and their contents spilling into the zone.
+Event's not 100% ironed out. Item use specifically.
 
 # To do, in something resembling an order of priority:
 still some quantity issues
 
-Finish theUse command, this will be difficult to keep flexible/simple. Will probably tie into the Event system.
-
-Add events to rooms, triggers to include:
-
-- entry and exit
-  
-- inventory changes
-  
-- more?
+Add numerical Event control
   
 Add other characters who can be talked to/have items given/taken (fetch quests, away!)
 
