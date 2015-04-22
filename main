@@ -37,16 +37,9 @@ class PC(Person):
 			else:
 				print(str(i))
 
-pInv = {
-		"clothing" : 1,
-		"wallet" : 1,
-		"shin" : 30,
-		}
-Player = PC("Dickbutt", pInv)
-
 class Zone(object):
 
-	def __init__(self, name, references, description, contents, exits, bLocked, keyItem, blockedText, unlockText, bDestroyKey, keyDestroyText):
+	def __init__(self, name, references, description, contents, exits, bLocked, keyItem, blockedText, unlockText, bDestroyKey, keyDestroyText, bEvent, Trigger, Event):
 		self.name = name
 		self.references = references
 		self.description = description
@@ -58,6 +51,9 @@ class Zone(object):
 		self.unlockText = unlockText
 		self.bDestroyKey = bDestroyKey
 		self.keyDestroyText = keyDestroyText
+		self.bEvent = bEvent
+		self.Trigger = Trigger
+		self.Event = Event
 		
 	def examineRoom(self):
 		print("You are in a " + self.description)
@@ -92,33 +88,9 @@ class Zone(object):
 					del self.contents[i]
 					break
 			
-TestRoomReferences = ["room", "area", "surroundings", "zone",]
-TestRoomDescription = "a small and uninteresting room. You don't remember how you got here, or even what this place is but you know it's the beginning of something much larger than you."
-TestRoomContents = {
-	"light" : 1,
-	"box" : 1,
-	"cloth" : 3,
-	}
-TestRoomExits = {
-	"south" : "TestHall",
-	}
-TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits, False, "none", "Not Locked, this is an error.", "Wasn't locked, this is an error.", False, "No key item, this is an error.")
-
-TestHallReferences = ["room", "hall", "corridor", "area", "zone", "surroundings",]
-TestHallDescription = "a long, seemingly endless hallway. No matter how far you walk down it's length the door you came in through is always right behind you."
-TestHallContents = {
-	"cloth" : 1,
-	}
-
-TestHallExits = {
-	"north" : "TestRoom",
-	}
-
-TestHall = Zone("Test Hall", TestHallReferences, TestHallDescription, TestHallContents, TestHallExits, True, "key", "A heavy wooden door bars your way. A small tarnished keyhole stares at you defiantly.", "With a dry click the key turns in the lock and the door swings open with an eerie creak.", True, "As you attempt the retrieve the key from the lock it surrenders to the ravages of time, snapping off with a gentle clang. You won't be getting that back.")
-
 class Item(object):
 	
-	def __init__(self, name, description, bPickUp, bUseable, bUseAlone, useWith, useText):
+	def __init__(self, name, description, bPickUp, bUseable, bUseAlone, useWith, useText, bEvent, Trigger, Event):
 		self.name = name
 		self.description = description
 		self.bPickUp = bPickUp
@@ -126,6 +98,9 @@ class Item(object):
 		self.bUseAlone = bUseAlone
 		self.useWith = useWith
 		self.useText = useText
+		self.bEvent = bEvent
+		self.Trigger = Trigger
+		self.Event = Event
 		
 	def describeItem(self):
 		print("It's %s" % (self.description))
@@ -134,7 +109,7 @@ class Container(Item):
 	
 	tempD = {}
 
-	def __init__(self, name, description, bPickUp, openDescription, contents, openText, closeText, bOpen, bUseable, bUseAlone, useWith, useText):
+	def __init__(self, name, description, bPickUp, openDescription, contents, openText, closeText, bOpen, bUseable, bUseAlone, useWith, useText, bEvent, Trigger, Event):
 		self.name = name
 		self.description = description
 		self.bPickUp = bPickUp
@@ -147,6 +122,9 @@ class Container(Item):
 		self.bUseAlone = bUseAlone
 		self.useWith = useWith
 		self.useText = useText
+		self.bEvent = bEvent
+		self.Trigger = Trigger
+		self.Event = Event
 		
 	def describeItem(self):
 		if(self.bOpen == False):
@@ -177,22 +155,41 @@ class Container(Item):
 		self.contents = self.tempD
 		self.tempD = {}
 
+class Event(object):
+
+	bRun = True
+	
+	def __init__(self, EventActions, bRepeat):
+		self.EventActions = EventActions
+		self.bRepeat = bRepeat
 		
-itemList = ["light", "box", "cloth", "clothing", "wallet", "shin", "key",]
+	def triggerEvent(self, Location, Character):
+		if(self.bRun == True):
+			for e in self.EventActions:
+				stingToClassDef(self, e)(Location, Character, self.EventActions[e])
+			if(self.bRepeat == True):
+				Scene(Location, Character)
+			else:
+				self.bRun = False
+				Scene(Location, Character)
+			Scene(Location, Character)
+		else:
+			Scene(Location, Character)
 
-light = Item("a light", "a small, dull light bulb hanging from the ceiling by a thin cord.", False, True, True, "none, error", "You burn your hand as you try to touch the light. That wasn't very clever.")
-
-boxContents = {
-	"key" : 1,
-	"cloth" : 5,
-	}
-
-box = Container("a box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.", False, "an open wooden box, emanating a musty small from it's dark interior.", boxContents, "As you slowly open the box it's hinges give a protesting groan and despite your gentle motions you are surrounded by a plume of dust which slowly settles to the floor.", "You close the box with a creak.", False, False, False, "None, error", "none, error")
-cloth = Item("a piece of cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?", True, True, False, "cloth", "You tie two pieces of cloth together and marvel at your work. It comes apart in your hand shortly after.")
-clothing = Item("simple clothing", "a simple outfit of various materials. It is far from fancy, or comfortable, but it is sufficient.", True, False, False, "none error", "none error")
-wallet = Item("a small leather wallet", "a small and worn wallet made of leather, or maybe fake leather. It smells of dust.", True, False, False, "none error", "none error")
-shin = Item("a shin", "a shiny stick of metal and plastic, with an intricate patterns carved up the side. These are what is used as currency when barter will not suffice.", True, False, False, "none error", "none error")
-key = Item("a small key", "a small tarnished key of silver. it looks as though it hasn't been touched in  very long time.", True, False, False, "none error", "none error")
+	def PRINT(self, Location, Character, text):
+		print(text)
+	
+	def ADDTOINVENTORY(self, Location, Character, item):
+		Character.addToInventory(item, 1)
+		
+	def REMOVEFROMINVENTORY(self, Location, Character, item):
+		Character.removeFromInventory(item, 1)
+		
+	def ADDITEM(self, Location, Character, item):
+		Location.addItem(item, 1)
+		
+	def REMOVEITEM(self, Location, Character, item):
+		Location.removeItem(item, 1)
 
 class PlayerCommands(object):##These are all the commands the player can perform, they are as dynamic as possible.
 	def __init__(self):
@@ -208,7 +205,8 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		for i in Location.references:
 			if(cmd.lower() == i):
 				Location.examineRoom()
-				Scene(Location, Character)
+				checkForEvent(Location, Character, Location, "examineZone")
+				##Scene(Location, Character)
 				
 		else:
 			for i in Location.contents:
@@ -216,14 +214,16 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					stringToClass(i).describeItem()
 					if(Location.contents[i] > 1):
 						print("There are " + str(Location.contents[i]) + " of them.")
-					Scene(Location, Character)
+					checkForEvent(Location, Character, stringToClass(i), "examineItem")
+					##Scene(Location, Character)
 			else:
 				for i in Player.inventory:
 					if(cmd.lower() == i):
 						stringToClass(i).describeItem()
 						if(Player.inventory[i] > 1):
 							print("You are carrying " + str(Player.inventory[i]) + " of them.")
-						Scene(Location, Character)
+						checkForEvent(Location, Character, stringToClass(i), "examineItem")
+						##Scene(Location, Character)
 				else:
 					print("You don't see a %s here." % (cmd.lower()))
 					Scene(Location, Character)
@@ -256,7 +256,8 @@ class PlayerCommands(object):##These are all the commands the player can perform
 				if hasattr(stringToClass(cmd.lower()), "bOpen"):
 					if(stringToClass(cmd.lower()).bOpen == False):
 						stringToClass(cmd.lower()).openContainer(Location, Character)
-						Scene(Location, Character)
+						checkForEvent(Location, Character, stringToClass(i), "openContainer")
+						##Scene(Location, Character)
 					else:
 						print("It's already open.")
 						Scene(Location, Character)
@@ -276,7 +277,8 @@ class PlayerCommands(object):##These are all the commands the player can perform
 				if hasattr(stringToClass(cmd.lower()), "bOpen"):
 					if(stringToClass(cmd.lower()).bOpen == True):
 						stringToClass(cmd.lower()).closeContainer(Location, Character)
-						Scene(Location, Character)
+						checkForEvent(Location, Character, stringToClass(i), "closeContainer")
+						##Scene(Location, Character)
 					else:
 						print("It's already closed.")
 						Scene(Location, Character)
@@ -296,7 +298,8 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					Character.addToInventory(cmd.lower(), Location.contents[cmd.lower()])
 					Location.removeItem(cmd.lower(), Location.contents[cmd.lower()])
 					print("You pick up the %s." % (l))
-					Scene(Location, Character)
+					checkForEvent(Location, Character, stringToClass(l), "pickupItem")
+					##Scene(Location, Character)
 				else:
 					print("You can't pick that up.")
 					Scene(Location, Character)
@@ -310,13 +313,19 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		for l in Character.inventory:
 			if(l == cmd.lower()):
 				q = input("Drop how many? >>>")
-				if(int(q) <= Character.inventory[cmd.lower()]):
-					Character.removeFromInventory(cmd.lower(), int(q))
-					Location.addItem(cmd.lower(), int(q))
-					print("You drop the %s." % (l))
-					Scene(Location, Character)
-				else:
-					print("You don't have that many " + cmd.lower() +"s.")
+				
+				try:
+					if(int(q) <= Character.inventory[cmd.lower()]):
+						Character.removeFromInventory(cmd.lower(), int(q))
+						Location.addItem(cmd.lower(), int(q))
+						print("You drop the %s." % (l))
+						checkForEvent(Location, Character, stringToClass(cmd.lower()), "dropItem")
+						##Scene(Location, Character)
+					else:
+						print("You don't have that many " + cmd.lower() +"s.")
+						Scene(Location, Character)
+				except:
+					print("That's not a number!")
 					Scene(Location, Character)
 		else:
 			print("You're not carrying a %s." % (cmd.lower()))
@@ -360,14 +369,16 @@ class PlayerCommands(object):##These are all the commands the player can perform
 				if(stringToClass(cmd.lower()).bUseable == True):
 					if(stringToClass(cmd.lower()).bUseAlone == True):
 						print(stringToClass(cmd.lower()).useText)
-						Scene(Location, Character)
+						checkForEvent(Location, Character, stringToClass(i), "useItem")
+						##Scene(Location, Character)
 					else:
 						u = input("Use with what? >>>")
 						for x in Character.inventory:
 							if(u.lower() == x):
 								if(stringToClass(cmd.lower()).useWith == x):
 									print(stringToClass(cmd.lower()).useText)
-									Scene(Location, Character)
+									checkForEvent(Location, Character, stringToClass(x), "useItem")
+									##Scene(Location, Character)
 								else:
 									print("You can't use those together.")
 									Scene(Location, Character)
@@ -375,13 +386,14 @@ class PlayerCommands(object):##These are all the commands the player can perform
 							if(u.lower() == x):
 								if(stringToClass(cmd.lower()).useWith == x):
 									print(stringToClass(cmd.lower()).useText)
-									Scene(Location, Character)
+									checkForEvent(Location, Character, stringToClass(x), "useItem")
+									##Scene(Location, Character)
 								else:
 									print("You can't use those together.")
 									Scene(Location, Character)
-							else:
-								print("There isn't a %s here.383" % (u))
-								Scene(Location, Character)
+						else:
+							print("There isn't a %s here." % (u.lower()))
+							Scene(Location, Character)
 				else:
 					print("You can't use that.")
 					Scene(Location, Character)
@@ -391,14 +403,16 @@ class PlayerCommands(object):##These are all the commands the player can perform
 				if(stringToClass(cmd.lower()).bUseable == True):
 					if(stringToClass(cmd.lower()).bUseAlone == True):
 						print(stringToClass(cmd.lower()).useText)
-						Scene(Location, Character)
+						checkForEvent(Location, Character, stringToClass(i), "useItem")
+						##Scene(Location, Character)
 					else:
 						u = input("Use with what? >>>")
 						for x in Character.inventory:
 							if(u.lower() == x):
 								if(stringToClass(cmd.lower()).useWith == x):
 									print(stringToClass(cmd.lower()).useText)
-									Scene(Location, Character)
+									checkForEvent(Location, Character, stringToClass(x), "useItem")
+									##Scene(Location, Character)
 								else:
 									print("You can't use those together.")
 									Scene(Location, Character)
@@ -406,26 +420,121 @@ class PlayerCommands(object):##These are all the commands the player can perform
 							if(u.lower() == x):
 								if(stringToClass(cmd.lower()).useWith == x):
 									print(stringToClass(cmd.lower()).useText)
-									Scene(Location, Character)
+									checkForEvent(Location, Character, stringToClass(x), "useItem")
+									##Scene(Location, Character)
 								else:
 									print("You can't use those together.")
 									Scene(Location, Character)
-							else:
-								print("There isn't a %s here.414" % (u))
-								Scene(Location, Character)
+						else:
+							print("There isn't a %s here." % (u.lower()))
+							Scene(Location, Character)
 				else:
 					print("You can't use that.")
 					Scene(Location, Character)
 		else:
-			print("There isn't a %s here.420" % (cmd.lower()))
+			print("There isn't a %s here." % (cmd.lower()))
 			Scene(Location, Character)
 
+###########################
+##ASSIGN ALL CLASSES HERE##
+###########################
+
+## START PLAYER COMMANDS##
 Commands = ["search", "examine", "inventory", "quit", "help", "open", "close", "take", "drop", "move", "use",]
 playerCommand = PlayerCommands()
+## END PLAYER COMMANDS##
+
+## BEGIN EVENT ASSIGNMENTS ##
+testEventActions = {
+	"PRINT" : "It seems you won't be able to go any further for now.",
+	"ADDTOINVENTORY" : "clothing",
+	"ADDITEM" : "wallet",
+	}
+testEvent = Event(testEventActions, True)
+
+boxEventActions = {
+	"PRINT" : "You somehow manage to pinch your fingers as you close it, man it would be stupid if you did that every time you closed this box...",
+	}
+boxEvent = Event(boxEventActions, False)
+
+dropClothesEventActions = {
+	"PRINT" : "You feel a little cold without your clothes on, and you doubt you'll be able to engage in decent society if you don't remedy the situation.",
+	}
+dropClothesEvent = Event(dropClothesEventActions, True)
+
+pickupKeyEventActions = {
+	"PRINT" : "As you hold the key in your hand, you get a sense of great...contextual importance."
+	}
+pickupKeyEvent = Event(pickupKeyEventActions, True)
+## END EVENT ASSIGNMENTS ##
+
+## BEGIN ITEM ASSIGNMENTS ##
+boxContents = {
+	"key" : 1,
+	"cloth" : 5,
+	}
+box = Container("a box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.", False, "an open wooden box, emanating a musty small from it's dark interior.", boxContents, "As you slowly open the box it's hinges give a protesting groan and despite your gentle motions you are surrounded by a plume of dust which slowly settles to the floor.", "You close the box with a creak.", False, False, False, "None, error", "none, error", True, "closeContainer", boxEvent)
+cloth = Item("a piece of cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?", True, True, False, "cloth", "You tie two pieces of cloth together and marvel at your work. It comes apart in your hand shortly after.", False, "none, error", "none, error")
+clothing = Item("simple clothing", "a simple outfit of various materials. It is far from fancy, or comfortable, but it is sufficient.", True, False, False, "none error", "none error", True, "dropItem", dropClothesEvent)
+wallet = Item("a small leather wallet", "a small and worn wallet made of leather, or maybe fake leather. It smells of dust.", True, False, False, "none error", "none error", False, "none, error", "none, error")
+shin = Item("a shin", "a shiny stick of metal and plastic, with an intricate patterns carved up the side. These are what is used as currency when barter will not suffice.", True, False, False, "none error", "none error", False, "none, error", "none, error")
+key = Item("a small key", "a small tarnished key of silver. it looks as though it hasn't been touched in  very long time.", True, False, False, "none error", "none error", True, "pickupItem", pickupKeyEvent)
+light = Item("a light", "a small, dull light bulb hanging from the ceiling by a thin cord.", False, True, True, "none, error", "You burn your hand as you try to touch the light. That wasn't very clever.", False, "none, error", "none, error")
+## END ITEM ASSIGNMENTS ##
+
+## BEGIN ITEM LIST ##
+itemList = ["light", "box", "cloth", "clothing", "wallet", "shin", "key",]
+## END ITEM LIST ##
+
+## BEGIN ZONE ASSGNMENTS ##
+TestRoomReferences = ["room", "area", "surroundings", "zone",]
+TestRoomDescription = "a small and uninteresting room. You don't remember how you got here, or even what this place is but you know it's the beginning of something much larger than you."
+TestRoomContents = {
+	"light" : 1,
+	"box" : 1,
+	"cloth" : 3,
+	}
+TestRoomExits = {
+	"south" : "TestHall",
+	}
+TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits, False, "none", "Not Locked, this is an error.", "Wasn't locked, this is an error.", False, "No key item, this is an error.", False, "none, error", "none")
+
+TestHallReferences = ["room", "hall", "corridor", "area", "zone", "surroundings",]
+TestHallDescription = "a long, seemingly endless hallway. No matter how far you walk down it's length the door you came in through is always right behind you."
+TestHallContents = {
+	"cloth" : 1,
+	}
+TestHallExits = {
+	"north" : "TestRoom",
+	}
+TestHall = Zone("Test Hall", TestHallReferences, TestHallDescription, TestHallContents, TestHallExits, True, "key", "A heavy wooden door bars your way. A small tarnished keyhole stares at you defiantly.", "With a dry click the key turns in the lock and the door swings open with an eerie creak.", True, "As you attempt the retrieve the key from the lock it surrenders to the ravages of time, snapping off with a gentle clang. You won't be getting that back.", True, "enterZone", testEvent)
+## END ZONE ASSIGNMENTS ##
+
+## BEGIN PLAYER CREATION ##
+pInv = {
+		"clothing" : 1,
+		"wallet" : 1,
+		"shin" : 30,
+		}
+Player = PC("Dickbutt", pInv)
+## END PLAYER CREATION ##
+
+## BEGIN NPC CREATION ##
+## END NPC CREATION ##
+
+def checkForEvent(Location, Character, caller, situation):
+	
+	if(caller.bEvent == True):
+		if(caller.Trigger == situation):
+			caller.Event.triggerEvent(Location, Character)
+		else:
+			Scene(Location, Character)
+	else:
+		Scene(Location, Character)
 
 def ChangeLocation(oldLocation, newLocation, Character):##This moves the player from oldLocation to newLocation. Moves the character class to maintain inventory and stats.
 	print("You step out of the " + oldLocation.name + " and into " + newLocation.name + ", " + newLocation.description)
-	Scene(newLocation, Player)
+	checkForEvent(newLocation, Character, newLocation, "enterZone")
 
 def Scene(Location, Character):##====This is the current scene. All commands and events should come back to this.
 	cmd = input(">>>")
