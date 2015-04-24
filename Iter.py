@@ -197,7 +197,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 	
 	def search(self, Location, Character):##Search the area, makes the Zone print its contents
 		Location.searchRoom()
-		Scene(Location, Character)
+		checkForEvent(Location, Character, Location, "searchZone")
 	
 	def examine(self, Location, Character):##Examines the area, makes the Zone print its description
 		cmd = input("Examine what? >>>")
@@ -206,7 +206,6 @@ class PlayerCommands(object):##These are all the commands the player can perform
 			if(cmd.lower() == i):
 				Location.examineRoom()
 				checkForEvent(Location, Character, Location, "examineZone")
-				##Scene(Location, Character)
 				
 		else:
 			for i in Location.contents:
@@ -215,7 +214,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					if(Location.contents[i] > 1):
 						print("There are " + str(Location.contents[i]) + " of them.")
 					checkForEvent(Location, Character, stringToClass(i), "examineItem")
-					##Scene(Location, Character)
+
 			else:
 				for i in Player.inventory:
 					if(cmd.lower() == i):
@@ -223,7 +222,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 						if(Player.inventory[i] > 1):
 							print("You are carrying " + str(Player.inventory[i]) + " of them.")
 						checkForEvent(Location, Character, stringToClass(i), "examineItem")
-						##Scene(Location, Character)
+
 				else:
 					print("You don't see a %s here." % (cmd.lower()))
 					Scene(Location, Character)
@@ -257,7 +256,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					if(stringToClass(cmd.lower()).bOpen == False):
 						stringToClass(cmd.lower()).openContainer(Location, Character)
 						checkForEvent(Location, Character, stringToClass(i), "openContainer")
-						##Scene(Location, Character)
+
 					else:
 						print("It's already open.")
 						Scene(Location, Character)
@@ -278,7 +277,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					if(stringToClass(cmd.lower()).bOpen == True):
 						stringToClass(cmd.lower()).closeContainer(Location, Character)
 						checkForEvent(Location, Character, stringToClass(i), "closeContainer")
-						##Scene(Location, Character)
+
 					else:
 						print("It's already closed.")
 						Scene(Location, Character)
@@ -299,7 +298,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					Location.removeItem(cmd.lower(), Location.contents[cmd.lower()])
 					print("You pick up the %s." % (l))
 					checkForEvent(Location, Character, stringToClass(l), "pickupItem")
-					##Scene(Location, Character)
+
 				else:
 					print("You can't pick that up.")
 					Scene(Location, Character)
@@ -320,7 +319,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 						Location.addItem(cmd.lower(), int(q))
 						print("You drop the %s." % (l))
 						checkForEvent(Location, Character, stringToClass(cmd.lower()), "dropItem")
-						##Scene(Location, Character)
+
 					else:
 						print("You don't have that many " + cmd.lower() +"s.")
 						Scene(Location, Character)
@@ -370,15 +369,15 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					if(stringToClass(cmd.lower()).bUseAlone == True):
 						print(stringToClass(cmd.lower()).useText)
 						checkForEvent(Location, Character, stringToClass(i), "useItem")
-						##Scene(Location, Character)
+
 					else:
 						u = input("Use with what? >>>")
 						for x in Character.inventory:
 							if(u.lower() == x):
 								if(stringToClass(cmd.lower()).useWith == x):
 									print(stringToClass(cmd.lower()).useText)
-									checkForEvent(Location, Character, stringToClass(x), "useItem")
-									##Scene(Location, Character)
+									checkForEvent(Location, Character, stringToClass(i), "useItem")
+
 								else:
 									print("You can't use those together.")
 									Scene(Location, Character)
@@ -386,8 +385,8 @@ class PlayerCommands(object):##These are all the commands the player can perform
 							if(u.lower() == x):
 								if(stringToClass(cmd.lower()).useWith == x):
 									print(stringToClass(cmd.lower()).useText)
-									checkForEvent(Location, Character, stringToClass(x), "useItem")
-									##Scene(Location, Character)
+									checkForEvent(Location, Character, stringToClass(i), "useItem")
+
 								else:
 									print("You can't use those together.")
 									Scene(Location, Character)
@@ -404,15 +403,15 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					if(stringToClass(cmd.lower()).bUseAlone == True):
 						print(stringToClass(cmd.lower()).useText)
 						checkForEvent(Location, Character, stringToClass(i), "useItem")
-						##Scene(Location, Character)
+
 					else:
 						u = input("Use with what? >>>")
 						for x in Character.inventory:
 							if(u.lower() == x):
 								if(stringToClass(cmd.lower()).useWith == x):
 									print(stringToClass(cmd.lower()).useText)
-									checkForEvent(Location, Character, stringToClass(x), "useItem")
-									##Scene(Location, Character)
+									checkForEvent(Location, Character, stringToClass(i), "useItem")
+
 								else:
 									print("You can't use those together.")
 									Scene(Location, Character)
@@ -420,8 +419,8 @@ class PlayerCommands(object):##These are all the commands the player can perform
 							if(u.lower() == x):
 								if(stringToClass(cmd.lower()).useWith == x):
 									print(stringToClass(cmd.lower()).useText)
-									checkForEvent(Location, Character, stringToClass(x), "useItem")
-									##Scene(Location, Character)
+									checkForEvent(Location, Character, stringToClass(i), "useItem")
+
 								else:
 									print("You can't use those together.")
 									Scene(Location, Character)
@@ -457,6 +456,20 @@ boxEventActions = {
 	}
 boxEvent = Event(boxEventActions, False)
 
+bulbEventActions = {
+	"ADDTOINVENTORY" : "lightbulb",
+	"REMOVEITEM" : "light",
+	"ADDITEM" : "socket"
+	}
+bulbEvent = Event(bulbEventActions, True)
+
+socketEventActions = {
+	"REMOVEFROMINVENTORY" : "lightbulb",
+	"REMOVEITEM" : "socket",
+	"ADDITEM" : "light"
+	}
+socketEvent = Event(socketEventActions, True)
+
 dropClothesEventActions = {
 	"PRINT" : "You feel a little cold without your clothes on, and you doubt you'll be able to engage in decent society if you don't remedy the situation.",
 	}
@@ -474,16 +487,18 @@ boxContents = {
 	"cloth" : 5,
 	}
 box = Container("a box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.", False, "an open wooden box, emanating a musty small from it's dark interior.", boxContents, "As you slowly open the box it's hinges give a protesting groan and despite your gentle motions you are surrounded by a plume of dust which slowly settles to the floor.", "You close the box with a creak.", False, False, False, "None, error", "none, error", True, "closeContainer", boxEvent)
-cloth = Item("a piece of cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?", True, True, False, "cloth", "You tie two pieces of cloth together and marvel at your work. It comes apart in your hand shortly after.", False, "none, error", "none, error")
+cloth = Item("a piece of cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?", True, True, False, "light", "Protecting your hand with the cloth, you manage to gently remove the lightbulb from its fitting.", True, "useItem", bulbEvent)
 clothing = Item("simple clothing", "a simple outfit of various materials. It is far from fancy, or comfortable, but it is sufficient.", True, False, False, "none error", "none error", True, "dropItem", dropClothesEvent)
 wallet = Item("a small leather wallet", "a small and worn wallet made of leather, or maybe fake leather. It smells of dust.", True, False, False, "none error", "none error", False, "none, error", "none, error")
 shin = Item("a shin", "a shiny stick of metal and plastic, with an intricate patterns carved up the side. These are what is used as currency when barter will not suffice.", True, False, False, "none error", "none error", False, "none, error", "none, error")
 key = Item("a small key", "a small tarnished key of silver. it looks as though it hasn't been touched in  very long time.", True, False, False, "none error", "none error", True, "pickupItem", pickupKeyEvent)
 light = Item("a light", "a small, dull light bulb hanging from the ceiling by a thin cord.", False, True, True, "none, error", "You burn your hand as you try to touch the light. That wasn't very clever.", False, "none, error", "none, error")
+lightbulb = Item("a lightbulb", "a small lightbulb of murky brown glass. It appears to be in working order", True, True, False, "socket", "You gently screw the bulb into place, and are briefly blinded by its surprisingly bright light as it turns on again.", True, "useItem", socketEvent)
+socket = Item("an empty light socket", "an empty electrical socket hanging by a ting cord from the ceiling. It looks like it should have a lightbulb in it.", False, True, False, "lightbulb", "You gently screw the bulb into place, and are briefly blinded by its surprisingly bright light as it turns on again.", True, "useItem", socketEvent)
 ## END ITEM ASSIGNMENTS ##
 
 ## BEGIN ITEM LIST ##
-itemList = ["light", "box", "cloth", "clothing", "wallet", "shin", "key",]
+itemList = ["light", "box", "cloth", "clothing", "wallet", "shin", "key", "lightbulb", "socket",]
 ## END ITEM LIST ##
 
 ## BEGIN ZONE ASSGNMENTS ##
