@@ -1,6 +1,9 @@
-import sys
+ import sys
+import os
+import time
+import collections
 
-class Person(object):
+class Person(object):##this is a generic person, with a name, inventory and basic add/remove item functions
 	def __init__(self, name, inventory):
 		self.name = name
 		self.inventory = inventory
@@ -27,7 +30,7 @@ class Person(object):
 		else:
 			print("You're not carrying a %s." % (str(item)))
 	
-class PC(Person):
+class PC(Person):##this is the player character class, it adds a checkInventory function to the Person class
 	def checkInventory(self):
 		print("You take a moment to check what you're carrying.")
 		print("You have on you:")
@@ -37,7 +40,7 @@ class PC(Person):
 			else:
 				print(str(i))
 
-class Zone(object):
+class Zone(object):##this is all rooms and areas the player will be in. It has add/remove item functions and search/examine functions
 
 	def __init__(self, name, references, description, contents, exits, bLocked, keyItem, blockedText, unlockText, bDestroyKey, keyDestroyText, bEvent, Trigger, Event):
 		self.name = name
@@ -87,8 +90,22 @@ class Zone(object):
 				else:
 					del self.contents[i]
 					break
+	
+	def addExit(self, direction, zone):
+		for x in self.exits:
+			if(x == direction):
+				print("There is already an exit that way.")
+				break
+		else:
+			self.exits[direction] = zone
+
+	def removeExit(self, direction):
+		for x in self.exits:
+			if(x == direction):
+				del self.exits[x]
+				break
 			
-class Item(object):
+class Item(object):##this is a basic item, it has many many variables that cover its name and description and use, along with attached events
 	
 	def __init__(self, name, description, bPickUp, bUseable, bUseAlone, useWith, useText, bEvent, Trigger, Event):
 		self.name = name
@@ -105,7 +122,7 @@ class Item(object):
 	def describeItem(self):
 		print("It's %s" % (self.description))
 
-class Container(Item):
+class Container(Item):##this is much like an item, except it has an inventory of its own, along with functionality to be opened and closed.
 	
 	tempD = {}
 
@@ -155,42 +172,64 @@ class Container(Item):
 		self.contents = self.tempD
 		self.tempD = {}
 
-class Event(object):
+class Event(object):##these are events, where the majority of the Engines power comes from, events can print, add/remove items to the room and player, and teleport the player to a new location without informing them.
 
 	bRun = True
 	
-	def __init__(self, EventActions, bRepeat):
+	def __init__(self, Location, Character, EventActions, EventOrder, bRepeat):
+		self.Location = Location
+		self.Character = Character
 		self.EventActions = EventActions
+		self.EventOrder = EventOrder
 		self.bRepeat = bRepeat
 		
-	def triggerEvent(self, Location, Character):
+	def triggerEvent(self, activeLocation, activeCharacter):##this runs through all the event items
+	
+		self.Location = activeLocation
+		self.Character = activeCharacter
+		
 		if(self.bRun == True):
 			for e in self.EventActions:
-				stingToClassDef(self, e)(Location, Character, self.EventActions[e])
+				stingToClassDef(self, e)(self.EventActions[e])
+				time.sleep(0.1)
 			if(self.bRepeat == True):
-				Scene(Location, Character)
+				Scene(self.Location, self.Character)
 			else:
 				self.bRun = False
-				Scene(Location, Character)
-			Scene(Location, Character)
+				Scene(self.Location, self.Character)
+			Scene(self.Location, self.Character)
 		else:
-			Scene(Location, Character)
+			Scene(self.Location, self.Character)
 
-	def PRINT(self, Location, Character, text):
+	def PRINT(self, text):##Call to print something to screen.
 		print(text)
 	
-	def ADDTOINVENTORY(self, Location, Character, item):
-		Character.addToInventory(item, 1)
+	def ADDTOINVENTORY(self, item):##Call to add an item to the player character
+		self.Character.addToInventory(item, 1)
 		
-	def REMOVEFROMINVENTORY(self, Location, Character, item):
-		Character.removeFromInventory(item, 1)
+	def REMOVEFROMINVENTORY(self, item):##Call to remove an item from the player character
+		self.Character.removeFromInventory(item, 1)
 		
-	def ADDITEM(self, Location, Character, item):
-		Location.addItem(item, 1)
+	def ADDITEM(self, item):##Call to add an item to the surround area
+		self.Location.addItem(item, 1)
 		
-	def REMOVEITEM(self, Location, Character, item):
-		Location.removeItem(item, 1)
+	def REMOVEITEM(self, item):##Call to remove an item from the surrounding area
+		self.Location.removeItem(item, 1)
+		
+	def TELEPORT(self, newLocation):##Call to teleport the player to a different room without telling them. Good for making a room 'change'
+		self.Location = stringToClass(newLocation)
 
+	def ADDEXIT(self, newExit):##This adds exits to the Location
+		for x in newExit:
+			self.Location.addExit(x, newExit[x])
+			
+	def REMOVEEXIT(self, delExit):##This removes and exit from the Location
+		self.Location.removeExit(delExit)
+	
+	def WAIT(self, waitText):##Prints waitText and waits for input, does not save input. Use this for walls of text/page turning etc. I dont like the current functionality, but its the only way to actually make it reliable.
+		os.system("echo %s" % (waitText))
+		os.system("pause")
+		
 class PlayerCommands(object):##These are all the commands the player can perform, they are as dynamic as possible.
 	def __init__(self):
 		pass
@@ -443,42 +482,59 @@ Commands = ["search", "examine", "inventory", "quit", "help", "open", "close", "
 playerCommand = PlayerCommands()
 ## END PLAYER COMMANDS##
 
+## BEGIN PLAYER CREATION ##
+pInv = {
+		"clothing" : 1,
+		"wallet" : 1,
+		"shin" : 30,
+		}
+Player = PC("Dickbutt", pInv)
+## END PLAYER CREATION ##
+
 ## BEGIN EVENT ASSIGNMENTS ##
 testEventActions = {
 	"PRINT" : "It seems you won't be able to go any further for now.",
 	"ADDTOINVENTORY" : "clothing",
 	"ADDITEM" : "wallet",
 	}
-testEvent = Event(testEventActions, True)
+testEventOrder = ["PRINT", "ADDTOINVENTORY", "ADDITEM"]
+testEvent = Event("none", "none", testEventActions, testEventOrder, True)
 
 boxEventActions = {
 	"PRINT" : "You somehow manage to pinch your fingers as you close it, man it would be stupid if you did that every time you closed this box...",
 	}
-boxEvent = Event(boxEventActions, False)
+boxEventOrder = ["PRINT",]
+boxEvent = Event("none", "none", boxEventActions, boxEventOrder,  False)
 
-bulbEventActions = {
-	"ADDTOINVENTORY" : "lightbulb",
-	"REMOVEITEM" : "light",
-	"ADDITEM" : "socket"
-	}
-bulbEvent = Event(bulbEventActions, True)
+bulbEventActions = collections.OrderedDict()
+bulbEventActions["ADDTOINVENTORY"] = "lightbulb"
+bulbEventActions["TELEPORT"] = "DarkTestRoom"
+bulbEventActions["PRINT"] = "Once you remove the lightbulb the room and you are both plunged into inky blackness, now you can't see!"
+bulbEventActions["WAIT"] = "What's that light..?"
+bulbEventActions["PRINT"] = "However, you notice the faint, illuminated outline of a hidden door to the east. If you could get the light back on you may be able to open it."
+bulbEventOrder = ["ADDTOINVENTORY", "TELEPORT", "PRINT", "WAIT", "PRINT"]
+bulbEvent = Event("none", "none", bulbEventActions, bulbEventOrder, True)
 
 socketEventActions = {
 	"REMOVEFROMINVENTORY" : "lightbulb",
-	"REMOVEITEM" : "socket",
-	"ADDITEM" : "light"
+	"TELEPORT" : "TestRoom",
+	"PRINT" : "You can see again! That's better. Now, about that hidden door.",
+	"ADDEXIT" : {"east" : "TestSecretRoom"},
 	}
-socketEvent = Event(socketEventActions, True)
+socketEventOrder = ["REMOVEFROMINVENTORY", "TELEPORT", "PRINT", "ADDEXIT",]
+socketEvent = Event("none", "none", socketEventActions, socketEventOrder, True)
 
 dropClothesEventActions = {
 	"PRINT" : "You feel a little cold without your clothes on, and you doubt you'll be able to engage in decent society if you don't remedy the situation.",
 	}
-dropClothesEvent = Event(dropClothesEventActions, True)
+dropEventOrder = ["PRINT",]
+dropClothesEvent = Event("none", "none", dropClothesEventActions, dropEventOrder, True)
 
 pickupKeyEventActions = {
 	"PRINT" : "As you hold the key in your hand, you get a sense of great...contextual importance."
 	}
-pickupKeyEvent = Event(pickupKeyEventActions, True)
+pickupKeyEventOrder = ["PRINT",]
+pickupKeyEvent = Event("none", "none", pickupKeyEventActions, pickupKeyEventOrder, True)
 ## END EVENT ASSIGNMENTS ##
 
 ## BEGIN ITEM ASSIGNMENTS ##
@@ -523,21 +579,28 @@ TestHallExits = {
 	"north" : "TestRoom",
 	}
 TestHall = Zone("Test Hall", TestHallReferences, TestHallDescription, TestHallContents, TestHallExits, True, "key", "A heavy wooden door bars your way. A small tarnished keyhole stares at you defiantly.", "With a dry click the key turns in the lock and the door swings open with an eerie creak.", True, "As you attempt the retrieve the key from the lock it surrenders to the ravages of time, snapping off with a gentle clang. You won't be getting that back.", True, "enterZone", testEvent)
-## END ZONE ASSIGNMENTS ##
 
-## BEGIN PLAYER CREATION ##
-pInv = {
-		"clothing" : 1,
-		"wallet" : 1,
-		"shin" : 30,
-		}
-Player = PC("Dickbutt", pInv)
-## END PLAYER CREATION ##
+DarkTestRoomReferences = ["room", "area", "surroundings", "zone",]
+DarkTestRoomDescription = "a pitch black room. You can hardly see a thing, and all you can feel is an empty light socket bumping against your massive head."
+DarkTestRoomContents = {
+	"socket" : 1,
+	}
+DarkTestRoomExits = {}
+DarkTestRoom = Zone("Test Room", DarkTestRoomReferences, DarkTestRoomDescription, DarkTestRoomContents, DarkTestRoomExits, False, "none", "none", "none", False, "none", False, "none", "none")
+
+TestSecretRoomReferences = ["room", "zone", "area", "surroundings",]
+TestSecretRoomDescrption = "a tiny room, with more in common with a closet than an actual room."
+TestSecretRoomContents = {}
+TestSecretRoomExits = {
+	"west" : "TestRoom",
+	}
+TestSecretRoom = Zone("Secret Room", TestRoomReferences, TestSecretRoomDescrption, TestSecretRoomContents, TestSecretRoomExits, False, "none", "none", "none", False, "none", False, "none", "none")
+## END ZONE ASSIGNMENTS ##
 
 ## BEGIN NPC CREATION ##
 ## END NPC CREATION ##
 
-def checkForEvent(Location, Character, caller, situation):
+def checkForEvent(Location, Character, caller, situation):##Call this to check if an event should be run.
 	
 	if(caller.bEvent == True):
 		if(caller.Trigger == situation):
