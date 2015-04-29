@@ -1,4 +1,4 @@
- import sys
+import sys
 import os
 import time
 import collections
@@ -172,7 +172,7 @@ class Container(Item):##this is much like an item, except it has an inventory of
 		self.contents = self.tempD
 		self.tempD = {}
 
-class Event(object):##these are events, where the majority of the Engines power comes from, events can print, add/remove items to the room and player, and teleport the player to a new location without informing them.
+class Event(object):##these are events, where the majority of the Engines power comes from, events can print, add/remove items to the room and player, and teleport the player to a new location without informing them. Each command can only be used once it seems.
 
 	bRun = True
 	
@@ -189,9 +189,12 @@ class Event(object):##these are events, where the majority of the Engines power 
 		self.Character = activeCharacter
 		
 		if(self.bRun == True):
-			for e in self.EventActions:
-				stingToClassDef(self, e)(self.EventActions[e])
-				time.sleep(0.1)
+			for e in self.EventOrder:
+				if(e != "EVENT"):
+					stingToClassDef(self, e)(self.EventActions[e])
+					time.sleep(0.1)
+				else:
+					stingToClassDef(stringToClass(self.EventActions[e]), "triggerEvent")(self.Location, self.Character)
 			if(self.bRepeat == True):
 				Scene(self.Location, self.Character)
 			else:
@@ -493,7 +496,7 @@ Player = PC("Dickbutt", pInv)
 
 ## BEGIN EVENT ASSIGNMENTS ##
 testEventActions = {
-	"PRINT" : "It seems you won't be able to go any further for now.",
+	"PRINT" : "It seems you won't be able to go any further for now, have some clothes and a wallet.",
 	"ADDTOINVENTORY" : "clothing",
 	"ADDITEM" : "wallet",
 	}
@@ -502,17 +505,25 @@ testEvent = Event("none", "none", testEventActions, testEventOrder, True)
 
 boxEventActions = {
 	"PRINT" : "You somehow manage to pinch your fingers as you close it, man it would be stupid if you did that every time you closed this box...",
+	"EVENT" : "secondEvent",
 	}
-boxEventOrder = ["PRINT",]
+boxEventOrder = ["PRINT", "EVENT"]
 boxEvent = Event("none", "none", boxEventActions, boxEventOrder,  False)
 
-bulbEventActions = collections.OrderedDict()
-bulbEventActions["ADDTOINVENTORY"] = "lightbulb"
-bulbEventActions["TELEPORT"] = "DarkTestRoom"
-bulbEventActions["PRINT"] = "Once you remove the lightbulb the room and you are both plunged into inky blackness, now you can't see!"
-bulbEventActions["WAIT"] = "What's that light..?"
-bulbEventActions["PRINT"] = "However, you notice the faint, illuminated outline of a hidden door to the east. If you could get the light back on you may be able to open it."
-bulbEventOrder = ["ADDTOINVENTORY", "TELEPORT", "PRINT", "WAIT", "PRINT"]
+secondEventAction = {
+	"PRINT" : "Turns out you can trigger events from events. This is good news.",
+	"WAIT" : "And you are restricted to a single instance of each operation per event. So long, complicated events will have to be split up between multiple events. This is a pain."
+	}
+secondEventOrder = ["PRINT", "WAIT"]
+secondEvent = Event("none", "none", secondEventAction, secondEventOrder, False)
+
+bulbEventActions = {
+	"ADDTOINVENTORY" : "lightbulb",
+	"TELEPORT" : "DarkTestRoom",
+	"PRINT" : "Once you remove the lightbulb the room and you are both plunged into inky blackness, now you can't see!",
+	"WAIT" : "However, you notice the faint outline of a hidden door on the east wall, weak light leaking through thin cracks. If you could get the light back on you might be able to open it.",
+	}
+bulbEventOrder = ["ADDTOINVENTORY", "TELEPORT", "PRINT", "WAIT"]
 bulbEvent = Event("none", "none", bulbEventActions, bulbEventOrder, True)
 
 socketEventActions = {
