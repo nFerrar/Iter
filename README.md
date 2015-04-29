@@ -46,6 +46,7 @@ Events System! Items and zones can have Evens tagged to them, which can be trigg
 - picking up
 - dropping
 and they can be limited to running once or infinitly. Numbered running still to come.
+A limitation of the events system is that currently each action can only be performed once per event, however this can be cicumvented as events can trigger other events.
 
 # Known Bugs
 
@@ -56,8 +57,10 @@ still some quantity issues
 
 Add numerical Event control
 
-Add "teleport" function, that will move the player to a new location without telling them. This will allow for scearios that have a room with the lights out or is on fire or is older. the player can be told the room ages arond them, when really they are secretly teleported to a new room with different descriptions.
-  
+Look into implementing a new class of item: structures. these will be for things like walls and doors so that they can be examined...maybe walls and doors can be entirely seperate things as well....give a zone a door?
+
 Add other characters who can be talked to/have items given/taken (fetch quests, away!)
+
+Fix Events so that parts can be done in order and multiple times.
 
 ?Quest System?
