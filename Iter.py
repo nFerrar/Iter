@@ -173,33 +173,28 @@ class Container(Item):##this is much like an item, except it has an inventory of
 		self.tempD = {}
 
 class Event(object):##these are events, where the majority of the Engines power comes from, events can print, add/remove items to the room and player, and teleport the player to a new location without informing them. Each command can only be used once it seems.
-
-	bRun = True
 	
-	def __init__(self, Location, Character, EventActions, EventOrder, bRepeat):
+	def __init__(self, Location, Character, EventActions, EventOrder, Repeat):
 		self.Location = Location
 		self.Character = Character
 		self.EventActions = EventActions
 		self.EventOrder = EventOrder
-		self.bRepeat = bRepeat
+		self.Repeat = Repeat
 		
 	def triggerEvent(self, activeLocation, activeCharacter):##this runs through all the event items
 	
 		self.Location = activeLocation
 		self.Character = activeCharacter
 		
-		if(self.bRun == True):
+		if(self.Repeat >= 0):
 			for e in self.EventOrder:
 				if(e != "EVENT"):
 					stingToClassDef(self, e)(self.EventActions[e])
 					time.sleep(0.1)
 				else:
+					self.Repeat -= 1
 					stingToClassDef(stringToClass(self.EventActions[e]), "triggerEvent")(self.Location, self.Character)
-			if(self.bRepeat == True):
-				Scene(self.Location, self.Character)
-			else:
-				self.bRun = False
-				Scene(self.Location, self.Character)
+			self.Repeat -= 1
 			Scene(self.Location, self.Character)
 		else:
 			Scene(self.Location, self.Character)
@@ -501,21 +496,21 @@ testEventActions = {
 	"ADDITEM" : "wallet",
 	}
 testEventOrder = ["PRINT", "ADDTOINVENTORY", "ADDITEM"]
-testEvent = Event("none", "none", testEventActions, testEventOrder, True)
+testEvent = Event("none", "none", testEventActions, testEventOrder, -1)
 
 boxEventActions = {
 	"PRINT" : "You somehow manage to pinch your fingers as you close it, man it would be stupid if you did that every time you closed this box...",
 	"EVENT" : "secondEvent",
 	}
 boxEventOrder = ["PRINT", "EVENT"]
-boxEvent = Event("none", "none", boxEventActions, boxEventOrder,  False)
+boxEvent = Event("none", "none", boxEventActions, boxEventOrder,  2)
 
 secondEventAction = {
 	"PRINT" : "Turns out you can trigger events from events. This is good news.",
 	"WAIT" : "And you are restricted to a single instance of each operation per event. So long, complicated events will have to be split up between multiple events. This is a pain."
 	}
 secondEventOrder = ["PRINT", "WAIT"]
-secondEvent = Event("none", "none", secondEventAction, secondEventOrder, False)
+secondEvent = Event("none", "none", secondEventAction, secondEventOrder, 1)
 
 bulbEventActions = {
 	"ADDTOINVENTORY" : "lightbulb",
@@ -524,28 +519,28 @@ bulbEventActions = {
 	"WAIT" : "However, you notice the faint outline of a hidden door on the east wall, weak light leaking through thin cracks. If you could get the light back on you might be able to open it.",
 	}
 bulbEventOrder = ["ADDTOINVENTORY", "TELEPORT", "PRINT", "WAIT"]
-bulbEvent = Event("none", "none", bulbEventActions, bulbEventOrder, True)
+bulbEvent = Event("none", "none", bulbEventActions, bulbEventOrder, -1)
 
 socketEventActions = {
 	"REMOVEFROMINVENTORY" : "lightbulb",
 	"TELEPORT" : "TestRoom",
 	"PRINT" : "You can see again! That's better. Now, about that hidden door.",
 	"ADDEXIT" : {"east" : "TestSecretRoom"},
-	}
+	} 
 socketEventOrder = ["REMOVEFROMINVENTORY", "TELEPORT", "PRINT", "ADDEXIT",]
-socketEvent = Event("none", "none", socketEventActions, socketEventOrder, True)
+socketEvent = Event("none", "none", socketEventActions, socketEventOrder, -1)
 
 dropClothesEventActions = {
 	"PRINT" : "You feel a little cold without your clothes on, and you doubt you'll be able to engage in decent society if you don't remedy the situation.",
 	}
 dropEventOrder = ["PRINT",]
-dropClothesEvent = Event("none", "none", dropClothesEventActions, dropEventOrder, True)
+dropClothesEvent = Event("none", "none", dropClothesEventActions, dropEventOrder, -1)
 
 pickupKeyEventActions = {
 	"PRINT" : "As you hold the key in your hand, you get a sense of great...contextual importance."
 	}
 pickupKeyEventOrder = ["PRINT",]
-pickupKeyEvent = Event("none", "none", pickupKeyEventActions, pickupKeyEventOrder, True)
+pickupKeyEvent = Event("none", "none", pickupKeyEventActions, pickupKeyEventOrder, -1)
 ## END EVENT ASSIGNMENTS ##
 
 ## BEGIN ITEM ASSIGNMENTS ##
