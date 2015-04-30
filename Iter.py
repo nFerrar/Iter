@@ -42,7 +42,7 @@ class PC(Person):##this is the player character class, it adds a checkInventory 
 
 class Zone(object):##this is all rooms and areas the player will be in. It has add/remove item functions and search/examine functions
 
-	def __init__(self, name, references, description, contents, exits, bLocked, keyItem, blockedText, unlockText, bDestroyKey, keyDestroyText, bEvent, Trigger, Event):
+	def __init__(self, name, references, description, contents, exits, bLocked, keyItem, blockedText, unlockText, bDestroyKey, keyDestroyText, bEvent, Trigger, Event, structures):
 		self.name = name
 		self.references = references
 		self.description = description
@@ -57,6 +57,7 @@ class Zone(object):##this is all rooms and areas the player will be in. It has a
 		self.bEvent = bEvent
 		self.Trigger = Trigger
 		self.Event = Event
+		self.structures = structures
 		
 	def examineRoom(self):
 		print("You are in a " + self.description)
@@ -66,8 +67,13 @@ class Zone(object):##this is all rooms and areas the player will be in. It has a
 		for i in self.contents:
 			if(self.contents[i] == 1):
 				print(stringToClass(i).name)
-			else:
+		else:
 				print(str(self.contents[i])+ " " + i + "s")
+				
+		print("In the %s you also see:" % (self.references[0]))
+		for s in self.structures:
+			print(stringToClass(s).name)
+			
 		print("And exits to the")
 		for x in self.exits:
 			print(x)
@@ -104,7 +110,20 @@ class Zone(object):##this is all rooms and areas the player will be in. It has a
 			if(x == direction):
 				del self.exits[x]
 				break
-			
+	
+	def addStructure(self, newStructure):
+		for i in self.structures:
+			if(newStructure == i):
+				break		
+		else:
+			self.structures.append(newStructure)
+							
+	def removeStucture(self, Structure):
+		for i in self.structures:
+			if(i == Structure):
+				self.structures.remove(i)
+				break
+	
 class Item(object):##this is a basic item, it has many many variables that cover its name and description and use, along with attached events
 	
 	def __init__(self, name, description, bPickUp, bUseable, bUseAlone, useWith, useText, bEvent, Trigger, Event):
@@ -172,6 +191,53 @@ class Container(Item):##this is much like an item, except it has an inventory of
 		self.contents = self.tempD
 		self.tempD = {}
 
+class Structure(object):##Base class for things like doors, walls and pillars of interest. Cannot be picked up.
+
+	def __init__(self, name, description, bUseable, bUseAlone, otherItem, useEvent, bExamineEvent, examineEvent):
+		self.name = name
+		self.description = description
+		self.bUseable = bUseable
+		self.bUseAlone = bUseAlone
+		self.otherItem = otherItem
+		self.useEvent = useEvent
+		self.bExamineEvent = bExamineEvent
+		self.examineEvent = examineEvent
+		
+	def examineStructure(self, Location, Character):
+		print("It's %s" % (self.description))
+		
+		if(self.bExamineEvent == True):
+			print("trying to trigger structure event")
+			self.examineEvent.triggerEvent(Location, Character)
+	
+	def useStructure(self, Location, Character):
+		if(self.bUseable == True):
+			if(self.bUseAlone == True):
+				self.useEvent.triggerEvent(Location, Character)
+			else:
+				cmd = input("What do you want use on it? >>>")
+				
+				if(cmd.lower() == self.otherItem):
+					for i in Character.inventory:
+						if(cmd.lower == i):
+							self.useEvent.triggerEvent(Location, Character)
+							break
+					else:
+						print("You don't have a %s." % (cmd.lower()))
+						Scene(Location, Character)
+				else:
+					for i in Character.inventory:
+						if(cmd.lower == i):
+							print("That doesn't seem to work.")
+							Scene(Location, Character)
+							break
+						else:
+							print("You don't have a %s." % (cmd.lower()))
+							Scene(Location, Character)
+		else:
+			print("You don't see a way to use that.")
+			Scene(Location, Character)
+						
 class Event(object):##these are events, where the majority of the Engines power comes from, events can print, add/remove items to the room and player, and teleport the player to a new location without informing them. Each command can only be used once it seems.
 	
 	def __init__(self, Location, Character, EventActions, EventOrder, Repeat):
@@ -186,7 +252,7 @@ class Event(object):##these are events, where the majority of the Engines power 
 		self.Location = activeLocation
 		self.Character = activeCharacter
 		
-		if(self.Repeat >= 0):
+		if(self.Repeat > 0):
 			for e in self.EventOrder:
 				if(e != "EVENT"):
 					stingToClassDef(self, e)(self.EventActions[e])
@@ -196,6 +262,15 @@ class Event(object):##these are events, where the majority of the Engines power 
 					stingToClassDef(stringToClass(self.EventActions[e]), "triggerEvent")(self.Location, self.Character)
 			self.Repeat -= 1
 			Scene(self.Location, self.Character)
+		if(self.Repeat <= -1):
+			for e in self.EventOrder:
+				if(e != "EVENT"):
+					stingToClassDef(self, e)(self.EventActions[e])
+					time.sleep(0.1)
+				else:
+					stingToClassDef(stringToClass(self.EventActions[e]), "triggerEvent")(self.Location, self.Character)
+			Scene(self.Location, self.Character)
+			
 		else:
 			Scene(self.Location, self.Character)
 
@@ -227,7 +302,13 @@ class Event(object):##these are events, where the majority of the Engines power 
 	def WAIT(self, waitText):##Prints waitText and waits for input, does not save input. Use this for walls of text/page turning etc. I dont like the current functionality, but its the only way to actually make it reliable.
 		os.system("echo %s" % (waitText))
 		os.system("pause")
-		
+	
+	def ADDSTRUCTURE(self, structure):##Adds a structure to the room
+		self.Location.addStructure(structure)
+	
+	def REMOVESTRUCTURE(self, structure):## Removes a structure from the room.
+		self.Location.removeStucture(structure)
+	
 class PlayerCommands(object):##These are all the commands the player can perform, they are as dynamic as possible.
 	def __init__(self):
 		pass
@@ -243,27 +324,34 @@ class PlayerCommands(object):##These are all the commands the player can perform
 			if(cmd.lower() == i):
 				Location.examineRoom()
 				checkForEvent(Location, Character, Location, "examineZone")
+				break
 				
-		else:
-			for i in Location.contents:
-				if(cmd.lower() == i):
-					stringToClass(i).describeItem()
-					if(Location.contents[i] > 1):
-						print("There are " + str(Location.contents[i]) + " of them.")
+		for i in Location.contents:
+			if(cmd.lower() == i):
+				stringToClass(i).describeItem()
+				if(Location.contents[i] > 1):
+					print("There are " + str(Location.contents[i]) + " of them.")
+				checkForEvent(Location, Character, stringToClass(i), "examineItem")
+				break
+				
+		for i in Player.inventory:
+			if(cmd.lower() == i):
+				stringToClass(i).describeItem()
+				if(Player.inventory[i] > 1):
+					print("You are carrying " + str(Player.inventory[i]) + " of them.")
 					checkForEvent(Location, Character, stringToClass(i), "examineItem")
+					break
 
+		else:
+			for s in Location.structures:
+				if(cmd.lower() == s):
+					stringToClass(s).examineStructure(Location, Character)
+					break
+			
 			else:
-				for i in Player.inventory:
-					if(cmd.lower() == i):
-						stringToClass(i).describeItem()
-						if(Player.inventory[i] > 1):
-							print("You are carrying " + str(Player.inventory[i]) + " of them.")
-						checkForEvent(Location, Character, stringToClass(i), "examineItem")
-
-				else:
-					print("You don't see a %s here." % (cmd.lower()))
-					Scene(Location, Character)
-	
+				print("You don't see a %s here." % (cmd.lower()))
+				Scene(Location, Character)
+					
 	def inventory(self, Location, Character):##Checks the players Inventory, printing its contents
 		Player.checkInventory()
 		Scene(Location, Character)
@@ -406,6 +494,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					if(stringToClass(cmd.lower()).bUseAlone == True):
 						print(stringToClass(cmd.lower()).useText)
 						checkForEvent(Location, Character, stringToClass(i), "useItem")
+						break
 
 					else:
 						u = input("Use with what? >>>")
@@ -414,6 +503,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 								if(stringToClass(cmd.lower()).useWith == x):
 									print(stringToClass(cmd.lower()).useText)
 									checkForEvent(Location, Character, stringToClass(i), "useItem")
+									break
 
 								else:
 									print("You can't use those together.")
@@ -423,23 +513,28 @@ class PlayerCommands(object):##These are all the commands the player can perform
 								if(stringToClass(cmd.lower()).useWith == x):
 									print(stringToClass(cmd.lower()).useText)
 									checkForEvent(Location, Character, stringToClass(i), "useItem")
+									break
 
 								else:
 									print("You can't use those together.")
 									Scene(Location, Character)
+									break
 						else:
 							print("There isn't a %s here." % (u.lower()))
 							Scene(Location, Character)
+							break
 				else:
 					print("You can't use that.")
 					Scene(Location, Character)
-					
+					break
+		
 		for i in Location.contents:
 			if(cmd.lower() == i):
 				if(stringToClass(cmd.lower()).bUseable == True):
 					if(stringToClass(cmd.lower()).bUseAlone == True):
 						print(stringToClass(cmd.lower()).useText)
 						checkForEvent(Location, Character, stringToClass(i), "useItem")
+						break
 
 					else:
 						u = input("Use with what? >>>")
@@ -448,25 +543,37 @@ class PlayerCommands(object):##These are all the commands the player can perform
 								if(stringToClass(cmd.lower()).useWith == x):
 									print(stringToClass(cmd.lower()).useText)
 									checkForEvent(Location, Character, stringToClass(i), "useItem")
+									break
 
 								else:
 									print("You can't use those together.")
 									Scene(Location, Character)
+									break
 						for x in Location.contents:
 							if(u.lower() == x):
 								if(stringToClass(cmd.lower()).useWith == x):
 									print(stringToClass(cmd.lower()).useText)
 									checkForEvent(Location, Character, stringToClass(i), "useItem")
+									break
 
 								else:
 									print("You can't use those together.")
 									Scene(Location, Character)
+									break
 						else:
 							print("There isn't a %s here." % (u.lower()))
 							Scene(Location, Character)
+							break
 				else:
 					print("You can't use that.")
 					Scene(Location, Character)
+					break
+		
+		for s in Location.structures:
+			if(cmd.lower() == s):
+				stringToClass(s).useStructure(Location, Character)
+				break
+		
 		else:
 			print("There isn't a %s here." % (cmd.lower()))
 			Scene(Location, Character)
@@ -516,7 +623,7 @@ bulbEventActions = {
 	"ADDTOINVENTORY" : "lightbulb",
 	"TELEPORT" : "DarkTestRoom",
 	"PRINT" : "Once you remove the lightbulb the room and you are both plunged into inky blackness, now you can't see!",
-	"WAIT" : "However, you notice the faint outline of a hidden door on the east wall, weak light leaking through thin cracks. If you could get the light back on you might be able to open it.",
+	"WAIT" : "However, in the dark, you notice a strange, thin line of light coming off the wall. If you could see you might be able to go and investigate.",
 	}
 bulbEventOrder = ["ADDTOINVENTORY", "TELEPORT", "PRINT", "WAIT"]
 bulbEvent = Event("none", "none", bulbEventActions, bulbEventOrder, -1)
@@ -524,10 +631,10 @@ bulbEvent = Event("none", "none", bulbEventActions, bulbEventOrder, -1)
 socketEventActions = {
 	"REMOVEFROMINVENTORY" : "lightbulb",
 	"TELEPORT" : "TestRoom",
-	"PRINT" : "You can see again! That's better. Now, about that hidden door.",
-	"ADDEXIT" : {"east" : "TestSecretRoom"},
+	"PRINT" : "You can see again! That's better. Now, about that suspicious wall.",
+	"ADDSTRUCTURE" : "wall",
 	} 
-socketEventOrder = ["REMOVEFROMINVENTORY", "TELEPORT", "PRINT", "ADDEXIT",]
+socketEventOrder = ["REMOVEFROMINVENTORY", "TELEPORT", "PRINT", "ADDSTRUCTURE"]
 socketEvent = Event("none", "none", socketEventActions, socketEventOrder, -1)
 
 dropClothesEventActions = {
@@ -541,6 +648,14 @@ pickupKeyEventActions = {
 	}
 pickupKeyEventOrder = ["PRINT",]
 pickupKeyEvent = Event("none", "none", pickupKeyEventActions, pickupKeyEventOrder, -1)
+
+hiddenDoorEventActions = {
+	"PRINT" : "As you apply some pressure to the wall, there is a creak, thunk, and rattle as the section of wall shifts back and rises up into the ceiling in a shower of dust, revealing a small exit to the east.",
+	"ADDEXIT" : {"east" : "TestSecretRoom"},
+	"REMOVESTRUCTURE" : "wall",
+	}
+hiddenDoorEventOrder = ["PRINT", "ADDEXIT", "REMOVESTRUCTURE"]
+hiddenDoorEvent = Event("none", "none", hiddenDoorEventActions, hiddenDoorEventOrder, 1)
 ## END EVENT ASSIGNMENTS ##
 
 ## BEGIN ITEM ASSIGNMENTS ##
@@ -563,6 +678,14 @@ socket = Item("an empty light socket", "an empty electrical socket hanging by a 
 itemList = ["light", "box", "cloth", "clothing", "wallet", "shin", "key", "lightbulb", "socket",]
 ## END ITEM LIST ##
 
+## BEGIN STRUCTURE ASSIGNMENTS ##
+wall = Structure("a suspicious wall", "a wall that seems a little off. With a closer inspection, it almost sounds hollow.", False, False, "none", "none", True, hiddenDoorEvent)
+## END STRUCTURE ASSIGNMENTS ##
+
+## BEGIN STRUCTURE LIST ##
+structureList = ["wall",]
+## END STRUCTURE LIST ##
+
 ## BEGIN ZONE ASSGNMENTS ##
 TestRoomReferences = ["room", "area", "surroundings", "zone",]
 TestRoomDescription = "a small and uninteresting room. You don't remember how you got here, or even what this place is but you know it's the beginning of something much larger than you."
@@ -574,7 +697,8 @@ TestRoomContents = {
 TestRoomExits = {
 	"south" : "TestHall",
 	}
-TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits, False, "none", "Not Locked, this is an error.", "Wasn't locked, this is an error.", False, "No key item, this is an error.", False, "none, error", "none")
+TestRoomStructures = []
+TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits, False, "none", "Not Locked, this is an error.", "Wasn't locked, this is an error.", False, "No key item, this is an error.", False, "none, error", "none", TestRoomStructures)
 
 TestHallReferences = ["room", "hall", "corridor", "area", "zone", "surroundings",]
 TestHallDescription = "a long, seemingly endless hallway. No matter how far you walk down it's length the door you came in through is always right behind you."
@@ -584,15 +708,17 @@ TestHallContents = {
 TestHallExits = {
 	"north" : "TestRoom",
 	}
-TestHall = Zone("Test Hall", TestHallReferences, TestHallDescription, TestHallContents, TestHallExits, True, "key", "A heavy wooden door bars your way. A small tarnished keyhole stares at you defiantly.", "With a dry click the key turns in the lock and the door swings open with an eerie creak.", True, "As you attempt the retrieve the key from the lock it surrenders to the ravages of time, snapping off with a gentle clang. You won't be getting that back.", True, "enterZone", testEvent)
+TestHallStructures = []
+TestHall = Zone("Test Hall", TestHallReferences, TestHallDescription, TestHallContents, TestHallExits, True, "key", "A heavy wooden door bars your way. A small tarnished keyhole stares at you defiantly.", "With a dry click the key turns in the lock and the door swings open with an eerie creak.", True, "As you attempt the retrieve the key from the lock it surrenders to the ravages of time, snapping off with a gentle clang. You won't be getting that back.", True, "enterZone", testEvent, TestHallStructures)
 
 DarkTestRoomReferences = ["room", "area", "surroundings", "zone",]
-DarkTestRoomDescription = "a pitch black room. You can hardly see a thing, and all you can feel is an empty light socket bumping against your massive head."
+DarkTestRoomDescription = "a pitch black room. You can hardly see a thing, and all you can feel is an empty light socket bumping against your MASSIVE head."
 DarkTestRoomContents = {
 	"socket" : 1,
 	}
 DarkTestRoomExits = {}
-DarkTestRoom = Zone("Test Room", DarkTestRoomReferences, DarkTestRoomDescription, DarkTestRoomContents, DarkTestRoomExits, False, "none", "none", "none", False, "none", False, "none", "none")
+DarkTestRoomStructures = []
+DarkTestRoom = Zone("Test Room", DarkTestRoomReferences, DarkTestRoomDescription, DarkTestRoomContents, DarkTestRoomExits, False, "none", "none", "none", False, "none", False, "none", "none", DarkTestRoomStructures)
 
 TestSecretRoomReferences = ["room", "zone", "area", "surroundings",]
 TestSecretRoomDescrption = "a tiny room, with more in common with a closet than an actual room."
@@ -600,7 +726,8 @@ TestSecretRoomContents = {}
 TestSecretRoomExits = {
 	"west" : "TestRoom",
 	}
-TestSecretRoom = Zone("Secret Room", TestRoomReferences, TestSecretRoomDescrption, TestSecretRoomContents, TestSecretRoomExits, False, "none", "none", "none", False, "none", False, "none", "none")
+TestSecretRoomStructures = []
+TestSecretRoom = Zone("Secret Room", TestRoomReferences, TestSecretRoomDescrption, TestSecretRoomContents, TestSecretRoomExits, False, "none", "none", "none", False, "none", False, "none", "none", TestSecretRoomStructures)
 ## END ZONE ASSIGNMENTS ##
 
 ## BEGIN NPC CREATION ##
@@ -625,7 +752,7 @@ def Scene(Location, Character):##====This is the current scene. All commands and
 	
 	for i in Commands:
 		if(cmd.lower() == i):
-			stingToClassDef(playerCommand, cmd.lower())(Location, Character)## This is where all player input is passed to the relevent command
+			stingToClassDef(playerCommand, cmd.lower())(Location, Character)## This is where all player input is passed to the relevant command
 			
 	else:
 		print("Command not recognised.")
