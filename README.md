@@ -1,5 +1,5 @@
 # Iter
-A text adventure written in Python. Because I can.
+A text adventure engine written in Python. Because I can.
 
 Conceptually, the idea of this little engine is flexibility through simplicity. Ideally anyone could grab this base engine and write their own little story driven adventure, or make a world to explore, even without Python experience.
 
@@ -45,6 +45,7 @@ Events System! Items and zones can have Evens tagged to them, which can be trigg
 - useing
 - picking up
 - dropping
+
 and they can be limited to running once or infinitly. Numbered running still to come.
 A limitation of the events system is that currently each action can only be performed once per event, however this can be cicumvented as events can trigger other events.
 
@@ -53,9 +54,8 @@ A limitation of the events system is that currently each action can only be perf
 Possible shenanigans with containers and their contents spilling into the zone.
 
 # To do, in something resembling an order of priority:
-still some quantity issues
 
-Add numerical Event control
+still some quantity issues
 
 Look into implementing a new class of item: structures. these will be for things like walls and doors so that they can be examined...maybe walls and doors can be entirely seperate things as well....give a zone a door?
 
