@@ -4,9 +4,12 @@ import time
 import collections
 
 class Person(object):##this is a generic person, with a name, inventory and basic add/remove item functions
-	def __init__(self, name, inventory):
+	def __init__(self, name, inventory, mind, body, spirit):
 		self.name = name
 		self.inventory = inventory
+		self.mind = mind
+		self.body = body
+		self.spirit = spirit
 	
 	def addToInventory(self, newItem, quantity):
 		for i in self.inventory:
@@ -40,9 +43,32 @@ class PC(Person):##this is the player character class, it adds a checkInventory 
 			else:
 				print(str(i))
 
+class NPC(Person):##NPCs. Anything other than the player.
+	def __init__(self, name, pronouns, inventory, mind, body, spirit, description, bEvent, Trigger, Event, Convo):
+		self.name = name
+		self.pronouns = pronouns
+		self.inventory = inventory
+		self.mind = mind
+		self.body = body
+		self.spirit = spirit
+		self.description = description
+		self.bEvent = bEvent
+		self.Trigger = Trigger
+		self.Event = Event
+		self.Convo = Convo
+		
+	def describeNPC(self):
+		print("%s is %s" % (self.name, self.description))
+		if(self.body >= 100):
+			print("%s looks in perfect health." % (self.pronouns["he"]))
+		elif(self.body >= 50):
+			print("%s looks a little worse for ware." % (self.pronouns["he"]))
+		else:
+			print("%s looks near death." % (self.pronouns["he"]))
+
 class Zone(object):##this is all rooms and areas the player will be in. It has add/remove item functions and search/examine functions
 
-	def __init__(self, name, references, description, contents, exits, bLocked, keyItem, blockedText, unlockText, bDestroyKey, keyDestroyText, bEvent, Trigger, Event, structures):
+	def __init__(self, name, references, description, contents, exits, bLocked, keyItem, blockedText, unlockText, bDestroyKey, keyDestroyText, bEvent, Trigger, Event, structures, npcs):
 		self.name = name
 		self.references = references
 		self.description = description
@@ -58,25 +84,36 @@ class Zone(object):##this is all rooms and areas the player will be in. It has a
 		self.Trigger = Trigger
 		self.Event = Event
 		self.structures = structures
+		self.npcs = npcs
 		
 	def examineRoom(self):
 		print("You are in a " + self.description)
 		
 	def searchRoom(self):
 		print("You search the immediate area, and you find:")
-		for i in self.contents:
-			if(self.contents[i] == 1):
-				print(stringToClass(i).name)
+		
+		if(self.contents != {}):
+			for i in self.contents:
+				if(self.contents[i] == 1):
+					print(stringToClass(i).name)
+			else:
+					print(str(self.contents[i])+ " " + i + "s")
 		else:
-				print(str(self.contents[i])+ " " + i + "s")
+			print("Nothing.")
+		
+		if(self.structures != []):
+			print("In the %s you also see:" % (self.references[0]))
+			for s in self.structures:
+				print(stringToClass(s).name)
 				
-		print("In the %s you also see:" % (self.references[0]))
-		for s in self.structures:
-			print(stringToClass(s).name)
+		if(self.exits != {}):
+			print("And exits to the")
+			for x in self.exits:
+				print(x)
 			
-		print("And exits to the")
-		for x in self.exits:
-			print(x)
+		if(self.npcs != []):
+			for c in self.npcs:
+				print("%s is here." % (stringToClass(c).name))
 				
 	def addItem(self, item, quantity):
 		for i in self.contents:
@@ -207,7 +244,6 @@ class Structure(object):##Base class for things like doors, walls and pillars of
 		print("It's %s" % (self.description))
 		
 		if(self.bExamineEvent == True):
-			print("trying to trigger structure event")
 			self.examineEvent.triggerEvent(Location, Character)
 	
 	def useStructure(self, Location, Character):
@@ -333,6 +369,12 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					print("There are " + str(Location.contents[i]) + " of them.")
 				checkForEvent(Location, Character, stringToClass(i), "examineItem")
 				break
+
+		for c in Location.npcs:
+			if(cmd.lower() == c):
+				stringToClass(c).describeNPC()
+				checkForEvent(Location, Character, stringToClass(c), "examineNPC")
+				break
 				
 		for i in Player.inventory:
 			if(cmd.lower() == i):
@@ -341,7 +383,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					print("You are carrying " + str(Player.inventory[i]) + " of them.")
 					checkForEvent(Location, Character, stringToClass(i), "examineItem")
 					break
-
+		
 		else:
 			for s in Location.structures:
 				if(cmd.lower() == s):
@@ -578,12 +620,23 @@ class PlayerCommands(object):##These are all the commands the player can perform
 			print("There isn't a %s here." % (cmd.lower()))
 			Scene(Location, Character)
 
+	def talk(self, Location, Character):
+		cmd = input("Who do you want to talk to? >>>")
+		
+		for c in Location.npcs:
+			if(cmd.lower() == c):
+				Conversation(Location, Character, stringToClass(c), "intro")
+				break
+		else:
+			print("You don't see anyone called %s here." % (cmd))
+			Scene(Location, Character)
+	
 ###########################
 ##ASSIGN ALL CLASSES HERE##
 ###########################
 
 ## START PLAYER COMMANDS##
-Commands = ["search", "examine", "inventory", "quit", "help", "open", "close", "take", "drop", "move", "use",]
+Commands = ["search", "examine", "inventory", "quit", "help", "open", "close", "take", "drop", "move", "use", "talk"]
 playerCommand = PlayerCommands()
 ## END PLAYER COMMANDS##
 
@@ -593,7 +646,7 @@ pInv = {
 		"wallet" : 1,
 		"shin" : 30,
 		}
-Player = PC("Dickbutt", pInv)
+Player = PC("Dickbutt", pInv, 100, 100, 100)
 ## END PLAYER CREATION ##
 
 ## BEGIN EVENT ASSIGNMENTS ##
@@ -698,7 +751,8 @@ TestRoomExits = {
 	"south" : "TestHall",
 	}
 TestRoomStructures = []
-TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits, False, "none", "Not Locked, this is an error.", "Wasn't locked, this is an error.", False, "No key item, this is an error.", False, "none, error", "none", TestRoomStructures)
+TestRoomNPCs = ["bob"]
+TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits, False, "none", "Not Locked, this is an error.", "Wasn't locked, this is an error.", False, "No key item, this is an error.", False, "none, error", "none", TestRoomStructures, TestRoomNPCs)
 
 TestHallReferences = ["room", "hall", "corridor", "area", "zone", "surroundings",]
 TestHallDescription = "a long, seemingly endless hallway. No matter how far you walk down it's length the door you came in through is always right behind you."
@@ -709,7 +763,8 @@ TestHallExits = {
 	"north" : "TestRoom",
 	}
 TestHallStructures = []
-TestHall = Zone("Test Hall", TestHallReferences, TestHallDescription, TestHallContents, TestHallExits, True, "key", "A heavy wooden door bars your way. A small tarnished keyhole stares at you defiantly.", "With a dry click the key turns in the lock and the door swings open with an eerie creak.", True, "As you attempt the retrieve the key from the lock it surrenders to the ravages of time, snapping off with a gentle clang. You won't be getting that back.", True, "enterZone", testEvent, TestHallStructures)
+TestHallNPCs = []
+TestHall = Zone("Test Hall", TestHallReferences, TestHallDescription, TestHallContents, TestHallExits, True, "key", "A heavy wooden door bars your way. A small tarnished keyhole stares at you defiantly.", "With a dry click the key turns in the lock and the door swings open with an eerie creak.", True, "As you attempt the retrieve the key from the lock it surrenders to the ravages of time, snapping off with a gentle clang. You won't be getting that back.", True, "enterZone", testEvent, TestHallStructures, TestHallNPCs)
 
 DarkTestRoomReferences = ["room", "area", "surroundings", "zone",]
 DarkTestRoomDescription = "a pitch black room. You can hardly see a thing, and all you can feel is an empty light socket bumping against your MASSIVE head."
@@ -718,7 +773,8 @@ DarkTestRoomContents = {
 	}
 DarkTestRoomExits = {}
 DarkTestRoomStructures = []
-DarkTestRoom = Zone("Test Room", DarkTestRoomReferences, DarkTestRoomDescription, DarkTestRoomContents, DarkTestRoomExits, False, "none", "none", "none", False, "none", False, "none", "none", DarkTestRoomStructures)
+DarkTestRoomNPCs = []
+DarkTestRoom = Zone("Test Room", DarkTestRoomReferences, DarkTestRoomDescription, DarkTestRoomContents, DarkTestRoomExits, False, "none", "none", "none", False, "none", False, "none", "none", DarkTestRoomStructures, DarkTestRoomNPCs)
 
 TestSecretRoomReferences = ["room", "zone", "area", "surroundings",]
 TestSecretRoomDescrption = "a tiny room, with more in common with a closet than an actual room."
@@ -727,11 +783,48 @@ TestSecretRoomExits = {
 	"west" : "TestRoom",
 	}
 TestSecretRoomStructures = []
-TestSecretRoom = Zone("Secret Room", TestRoomReferences, TestSecretRoomDescrption, TestSecretRoomContents, TestSecretRoomExits, False, "none", "none", "none", False, "none", False, "none", "none", TestSecretRoomStructures)
+TestSecretRoomNPCs = ["bob"]
+TestSecretRoom = Zone("Secret Room", TestRoomReferences, TestSecretRoomDescrption, TestSecretRoomContents, TestSecretRoomExits, False, "none", "none", "none", False, "none", False, "none", "none", TestSecretRoomStructures, TestSecretRoomNPCs)
 ## END ZONE ASSIGNMENTS ##
 
 ## BEGIN NPC CREATION ##
+bobInv = {
+	"clothing" : 1,
+	"wallet" : 1,
+	"shin" : 50,
+	}
+bobPronouns = {
+	"he" : "He",
+	"his" : "His",
+	"him" : "Him",
+	}
+bobConvo = {
+	"intro" : "'Hi there, my name's Bob and while you may be hoping that I have something interesting to say, I really don't. At all.'",
+	"none" : "'Come again?'",
+	"here" : "'This is onlt a small test area. There are three different locations you can visit...well four technically, but as far as your concerned there are only three. Don't expect much from any of them though.'",
+	"fuck" : "'Watch your profamity.'",
+	"who" : "'I'm Bob, the two dimensional test character who has even less programming behind him than a box. Give me time and I may become a bit more complicated. Until then fuck you and your organic privilege.",
+	"where" : "'This place is just a construct. A framework. Someday it may be a wondrous place of adventure, but right now it is the worldly equivalent of scaffolding held up by google and machete-like practises.'",
+	"goodbye" : "'Get the fuck out.'",
+	}
+bob = NPC("Bob", bobPronouns, bobInv, 100, 100, 100, "a short, uninteresting fellow with strange, oddly arranged facial features that you'd think make him easy to remember, but somehow have the opposite effect.", False, "none", "none", bobConvo)
 ## END NPC CREATION ##
+
+def Conversation(Location, Character, NPC, Prompt):##Conversation runtime, separate from Scene(), but will always redirect there upon exit.
+	print(NPC.Convo[Prompt])
+	cmd = input(">>>>")
+	
+	for p in NPC.Convo:
+		if(p in cmd.lower()):
+			Conversation(Location, Character, NPC, p)
+			break
+	else:
+		if("bye" in cmd.lower() or "leave" in cmd.lower() or "farewell" in cmd.lower()):
+			print(NPC.Convo["goodbye"])
+			Scene(Location, Character)
+		else:
+			print("%s doesn't seem to understand you." % (NPC.name))
+			Conversation(Location, Character, NPC, "none")
 
 def checkForEvent(Location, Character, caller, situation):##Call this to check if an event should be run.
 	
@@ -745,14 +838,17 @@ def checkForEvent(Location, Character, caller, situation):##Call this to check i
 
 def ChangeLocation(oldLocation, newLocation, Character):##This moves the player from oldLocation to newLocation. Moves the character class to maintain inventory and stats.
 	print("You step out of the " + oldLocation.name + " and into " + newLocation.name + ", " + newLocation.description)
+	if(newLocation.npcs != []):
+		for c in newLocation.npcs:
+			print("%s is here." % (stringToClass(c).name))
 	checkForEvent(newLocation, Character, newLocation, "enterZone")
 
 def Scene(Location, Character):##====This is the current scene. All commands and events should come back to this.
 	cmd = input(">>>")
 	
 	for i in Commands:
-		if(cmd.lower() == i):
-			stingToClassDef(playerCommand, cmd.lower())(Location, Character)## This is where all player input is passed to the relevant command
+		if(i in cmd.lower()):
+			stingToClassDef(playerCommand, i)(Location, Character)## This is where all player input is passed to the relevant command
 			
 	else:
 		print("Command not recognised.")
