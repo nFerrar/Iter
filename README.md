@@ -33,6 +33,9 @@ inventory
 quit 
 - quits from the game, no save function yet/ever. yolo
 
+talk
+- lets you talk to NPCs!
+
 help 
 - lists the available commands, without description. GLHF
 
@@ -63,6 +66,8 @@ Can be opened and closed, have an internal inventory, cant be picked up, can act
 
 Can only be examines and used, triggering events.
 
+Now with all new NPCs! These guys have names, stats, descriptions, inventories, and even limited conversational skills!
+
 # Known Bugs
 
 Possible shenanigans with containers and their contents spilling into the zone.
@@ -71,7 +76,9 @@ Possible shenanigans with containers and their contents spilling into the zone.
 
 still some quantity issue
 
-Add other characters who can be talked to/have items given/taken (fetch quests, away!)
+Add functionality for NPC inventories and deeper conversation trees that can !trigger events!
+
+Combat System.
 
 Fix Events so that parts can be done in order and multiple times.
 
