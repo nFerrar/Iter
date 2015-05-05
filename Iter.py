@@ -349,56 +349,92 @@ class PlayerCommands(object):##These are all the commands the player can perform
 	def __init__(self):
 		pass
 	
-	def search(self, Location, Character):##Search the area, makes the Zone print its contents
+	def search(self, Location, Character, Command):##Search the area, makes the Zone print its contents
 		Location.searchRoom()
 		checkForEvent(Location, Character, Location, "searchZone")
 	
-	def examine(self, Location, Character):##Examines the area, makes the Zone print its description
-		cmd = input("Examine what? >>>")
-		
-		for i in Location.references:
-			if(cmd.lower() == i):
-				Location.examineRoom()
-				checkForEvent(Location, Character, Location, "examineZone")
-				break
-				
-		for i in Location.contents:
-			if(cmd.lower() == i):
-				stringToClass(i).describeItem()
-				if(Location.contents[i] > 1):
-					print("There are " + str(Location.contents[i]) + " of them.")
-				checkForEvent(Location, Character, stringToClass(i), "examineItem")
-				break
-
-		for c in Location.npcs:
-			if(cmd.lower() == c):
-				stringToClass(c).describeNPC()
-				checkForEvent(Location, Character, stringToClass(c), "examineNPC")
-				break
-				
-		for i in Player.inventory:
-			if(cmd.lower() == i):
-				stringToClass(i).describeItem()
-				if(Player.inventory[i] > 1):
-					print("You are carrying " + str(Player.inventory[i]) + " of them.")
+	def examine(self, Location, Character, Command):##Examines the area, makes the Zone print its description
+			
+		if(len(Command) > 7):
+			for i in Location.references:
+				if i in Command:
+					Location.examineRoom()
+					checkForEvent(Location, Character, Location, "examineZone")
+					break
+					
+			for i in Location.contents:
+				if i in Command:
+					stringToClass(i).describeItem()
+					if(Location.contents[i] > 1):
+						print("There are " + str(Location.contents[i]) + " of them.")
 					checkForEvent(Location, Character, stringToClass(i), "examineItem")
 					break
-		
+					
+			for c in Location.npcs:
+				if c in Command:
+					stringToClass(c).describeNPC()
+					checkForEvent(Location, Character, stringToClass(c), "examineNPC")
+					break
+					
+			for i in Player.inventory:
+				if i in Command:
+					stringToClass(i).describeItem()
+					if(Player.inventory[i] > 1):
+						print("You are carrying " + str(Player.inventory[i]) + " of them.")
+					checkForEvent(Location, Character, stringToClass(i), "examineItem")
+					break
+
+						
+			for s in Location.structures:
+				if s in Command:
+					stringToClass(s).examineStructure(Location, Character)
+					break
+			
 		else:
+			cmd = input("Examine what? >>>")
+			
+			for i in Location.references:
+				if(cmd.lower() == i):
+					Location.examineRoom()
+					checkForEvent(Location, Character, Location, "examineZone")
+					break
+					
+			for i in Location.contents:
+				if(cmd.lower() == i):
+					stringToClass(i).describeItem()
+					if(Location.contents[i] > 1):
+						print("There are " + str(Location.contents[i]) + " of them.")
+					checkForEvent(Location, Character, stringToClass(i), "examineItem")
+					break
+
+			for c in Location.npcs:
+				if(cmd.lower() == c):
+					stringToClass(c).describeNPC()
+					checkForEvent(Location, Character, stringToClass(c), "examineNPC")
+					break
+					
+			for i in Player.inventory:
+				if(cmd.lower() == i):
+					stringToClass(i).describeItem()
+					if(Player.inventory[i] > 1):
+						print("You are carrying " + str(Player.inventory[i]) + " of them.")
+					checkForEvent(Location, Character, stringToClass(i), "examineItem")
+					break
+			
 			for s in Location.structures:
 				if(cmd.lower() == s):
 					stringToClass(s).examineStructure(Location, Character)
 					break
-			
+				
 			else:
 				print("You don't see a %s here." % (cmd.lower()))
 				Scene(Location, Character)
-					
-	def inventory(self, Location, Character):##Checks the players Inventory, printing its contents
+						
+	def inventory(self, Location, Character, Command):##Checks the players Inventory, printing its contents
 		Player.checkInventory()
 		Scene(Location, Character)
 		
-	def quit(self, Location, Character):##lets you quit, has a confirmation. NO SAVE BITCHES. YOLO
+	def quit(self, Location, Character, Command):##lets you quit, has a confirmation. NO SAVE BITCHES. YOLO
 		cmd = input("Are you sure you want to quit?")
 		
 		if(cmd.lower() == "y" or cmd.lower() == "yes"):
@@ -408,228 +444,429 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		else:
 			Scene(Location, Character)
 		
-	def help(self, Location, Character):##siply prints all the commands, no descriptions for you
+	def help(self, Location, Character, Command):##siply prints all the commands, no descriptions for you
 		print("Available Commands:")
 		for c in Commands:
 			print(c)
 		Scene(Location, Character)
 		
-	def open(self, Location, Character):##used to open Container class items. toggles variables
-		cmd = input("Open what? >>>")
-		
-		for i in itemList:
-			if(i == cmd.lower()):
-				if hasattr(stringToClass(cmd.lower()), "bOpen"):
-					if(stringToClass(cmd.lower()).bOpen == False):
-						stringToClass(cmd.lower()).openContainer(Location, Character)
-						checkForEvent(Location, Character, stringToClass(i), "openContainer")
-
-					else:
-						print("It's already open.")
-						Scene(Location, Character)
-						
-				else:
-					print("You can't open that.")
-					Scene(Location, Character)
-		else:
-			print("You don't see a %s here." % (cmd.lower()))
-			Scene(Location, Character)
-		
-	def close(self, Location, Character):##used to close open Containers. toggles variables and re-checks contents in case of deletion.
-		cmd = input("Close what? >>>")
-		
-		for i in itemList:
-			if(i == cmd.lower()):
-				if hasattr(stringToClass(cmd.lower()), "bOpen"):
-					if(stringToClass(cmd.lower()).bOpen == True):
-						stringToClass(cmd.lower()).closeContainer(Location, Character)
-						checkForEvent(Location, Character, stringToClass(i), "closeContainer")
-
-					else:
-						print("It's already closed.")
-						Scene(Location, Character)
-				else:
-					print("You can't close that.")
-					Scene(Location, Character)
-		else:
-			print("You don't see a %s here." % (cmd.lower()))
-			Scene(Location, Character)
-
-	def take(self, Location, Character):##lets the player pick up Items marked as pickupable.
-		cmd = input("What would you like to pick up? >>>")
-		
-		for l in Location.contents:
-			if(l == cmd.lower()):
-				if(stringToClass(cmd.lower()).bPickUp == True):
-					Character.addToInventory(cmd.lower(), Location.contents[cmd.lower()])
-					Location.removeItem(cmd.lower(), Location.contents[cmd.lower()])
-					print("You pick up the %s." % (l))
-					checkForEvent(Location, Character, stringToClass(l), "pickupItem")
-
-				else:
-					print("You can't pick that up.")
-					Scene(Location, Character)
-		else:
-			print("There isn't a %s here." % (cmd.lower()))
-			Scene(Location, Character)
+	def open(self, Location, Character, Command):##used to open Container class items. toggles variables
 			
-	def drop(self, Location, Character):##drops an item from the inventory to the zone. will go back into a container it came from
-		cmd = input("What do you want to drop? >>>")
+		if(len(Command) > 4):
+			for i in Location.contents:
+				if i in Command:
+					if hasattr(stringToClass(i), "bOpen"):
+						if(stringToClass(i).bOpen == False):
+							stringToClass(i).openContainer(Location, Character)
+							checkForEvent(Location, Character, stringToClass(i), "openContainer")
+
+						else:
+							print("It's already open.")
+							Scene(Location, Character)
+							
+					else:
+						print("You can't open that.")
+						Scene(Location, Character)
+			
+		else:
+			cmd = input("Open what? >>>")
+			
+			for i in Location.contents:
+				if(i == cmd.lower()):
+					if hasattr(stringToClass(i), "bOpen"):
+						if(stringToClass(i).bOpen == False):
+							stringToClass(i).openContainer(Location, Character)
+							checkForEvent(Location, Character, stringToClass(i), "openContainer")
+
+						else:
+							print("It's already open.")
+							Scene(Location, Character)
+							
+					else:
+						print("You can't open that.")
+						Scene(Location, Character)
+			else:
+				print("You don't see a %s here." % (cmd.lower()))
+				Scene(Location, Character)
 		
-		for l in Character.inventory:
-			if(l == cmd.lower()):
-				q = input("Drop how many? >>>")
-				
-				try:
-					if(int(q) <= Character.inventory[cmd.lower()]):
-						Character.removeFromInventory(cmd.lower(), int(q))
-						Location.addItem(cmd.lower(), int(q))
-						print("You drop the %s." % (l))
-						checkForEvent(Location, Character, stringToClass(cmd.lower()), "dropItem")
+	def close(self, Location, Character, Command):##used to close open Containers. toggles variables and re-checks contents in case of deletion.
+			
+		if(len(Command) > 5):
+			for i in Location.contents:
+				if i in Command:
+					if hasattr(stringToClass(i), "bOpen"):
+						if(stringToClass(i).bOpen == True):
+							stringToClass(i).closeContainer(Location, Character)
+							checkForEvent(Location, Character, stringToClass(i), "closeContainer")
+
+						else:
+							print("It's already closed.")
+							Scene(Location, Character)
+					else:
+						print("You can't close that.")
+						Scene(Location, Character)
+			
+		else:
+			cmd = input("Close what? >>>")
+			
+			for i in Location.contents:
+				if(i == cmd.lower()):
+					if hasattr(stringToClass(i), "bOpen"):
+						if(stringToClass(i).bOpen == True):
+							stringToClass(i).closeContainer(Location, Character)
+							checkForEvent(Location, Character, stringToClass(i), "closeContainer")
+
+						else:
+							print("It's already closed.")
+							Scene(Location, Character)
+					else:
+						print("You can't close that.")
+						Scene(Location, Character)
+			else:
+				print("You don't see a %s here." % (cmd.lower()))
+				Scene(Location, Character)
+
+	def take(self, Location, Character, Command):##lets the player pick up Items marked as pickupable.
+			
+		if(len(Command) > 4):
+			for l in Location.contents:
+				if l in Command:
+					if(stringToClass(l).bPickUp == True):
+						Character.addToInventory(l, Location.contents[l])
+						Location.removeItem(l, Location.contents[l])
+						print("You pick up the %s." % (l))
+						checkForEvent(Location, Character, stringToClass(l), "pickupItem")
 
 					else:
-						print("You don't have that many " + cmd.lower() +"s.")
+						print("You can't pick that up.")
 						Scene(Location, Character)
-				except:
-					print("That's not a number!")
-					Scene(Location, Character)
-		else:
-			print("You're not carrying a %s." % (cmd.lower()))
-			Scene(Location, Character)
 			
-	def move(self, Location, Character):##moves the character from one location to another.
-		cmd = input("Which direction do you want to go? >>>")
+		else:
+			cmd = input("What would you like to pick up? >>>")
+			
+			for l in Location.contents:
+				if(l == cmd.lower()):
+					if(stringToClass(cmd.lower()).bPickUp == True):
+						Character.addToInventory(cmd.lower(), Location.contents[cmd.lower()])
+						Location.removeItem(cmd.lower(), Location.contents[cmd.lower()])
+						print("You pick up the %s." % (l))
+						checkForEvent(Location, Character, stringToClass(l), "pickupItem")
+
+					else:
+						print("You can't pick that up.")
+						Scene(Location, Character)
+			else:
+				print("There isn't a %s here." % (cmd.lower()))
+				Scene(Location, Character)
+			
+	def drop(self, Location, Character, Command):##drops an item from the inventory to the zone. will go back into a container it came from
 		
-		for d in Location.exits:
-			if(d == cmd.lower()):
-				if(stringToClass(Location.exits[d]).bLocked == False):
-					ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
-					break
-				else:
-					for k in Character.inventory:
-						if(k == stringToClass(Location.exits[d]).keyItem):
-							stringToClass(Location.exits[d]).bLocked = False
-							print(stringToClass(Location.exits[d]).unlockText)
+		if(len(Command) > 4):
+			for l in Character.inventory:
+				if l in Command:
+					q = input("Drop how many? >>>")
 						
-							if(stringToClass(Location.exits[d]).bDestroyKey == False):
-								ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
-								break
+					try:
+						if(int(q) <= Character.inventory[l]):
+							Character.removeFromInventory(l, int(q))
+							Location.addItem(l, int(q))
+							print("You drop the %s." % (l))
+							checkForEvent(Location, Character, stringToClass(l), "dropItem")
+
+						else:
+							print("You don't have that many " + l +"s.")
+							Scene(Location, Character)
+					except:
+						print("That's not a number!")
+						Scene(Location, Character)
+					
+		else:
+			cmd = input("What do you want to drop? >>>")
+			
+			for l in Character.inventory:
+				if(l == cmd.lower()):
+					q = input("Drop how many? >>>")
+					
+					try:
+						if(int(q) <= Character.inventory[cmd.lower()]):
+							Character.removeFromInventory(cmd.lower(), int(q))
+							Location.addItem(cmd.lower(), int(q))
+							print("You drop the %s." % (l))
+							checkForEvent(Location, Character, stringToClass(cmd.lower()), "dropItem")
+
+						else:
+							print("You don't have that many " + cmd.lower() +"s.")
+							Scene(Location, Character)
+					except:
+						print("That's not a number!")
+						Scene(Location, Character)
+			else:
+				print("You're not carrying a %s." % (cmd.lower()))
+				Scene(Location, Character)
+			
+	def move(self, Location, Character, Command):##moves the character from one location to another.
+		
+		if(len(Command) > 4):
+			for d in Location.exits:
+				if d in Command:
+					if(stringToClass(Location.exits[d]).bLocked == False):
+							ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
+							break
+					else:
+						for k in Character.inventory:
+							if(k == stringToClass(Location.exits[d]).keyItem):
+								stringToClass(Location.exits[d]).bLocked = False
+								print(stringToClass(Location.exits[d]).unlockText)
+								
+								if(stringToClass(Location.exits[d]).bDestroyKey == False):
+									ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
+									break
+								else:
+									print(stringToClass(Location.exits[d]).keyDestroyText)
+									Character.removeFromInventory(stringToClass(Location.exits[d]).keyItem, 1)
+									ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
+									break
 							else:
-								print(stringToClass(Location.exits[d]).keyDestroyText)
-								Character.removeFromInventory(stringToClass(Location.exits[d]).keyItem, 1)
-								ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
+								print(stringToClass(Location.exits[d]).blockedText)
+								Scene(Location, Character)
 								break
+				else:
+					print("You cannot go that way.")
+					Scene(Location, Character)
+		
+		else:
+			cmd = input("Which direction do you want to go? >>>")
+			
+			for d in Location.exits:
+				if(d == cmd.lower()):
+					if(stringToClass(Location.exits[d]).bLocked == False):
+						ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
+						break
 					else:
-						print(stringToClass(Location.exits[d]).blockedText)
+						for k in Character.inventory:
+							if(k == stringToClass(Location.exits[d]).keyItem):
+								stringToClass(Location.exits[d]).bLocked = False
+								print(stringToClass(Location.exits[d]).unlockText)
+							
+								if(stringToClass(Location.exits[d]).bDestroyKey == False):
+									ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
+									break
+								else:
+									print(stringToClass(Location.exits[d]).keyDestroyText)
+									Character.removeFromInventory(stringToClass(Location.exits[d]).keyItem, 1)
+									ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
+									break
+						else:
+							print(stringToClass(Location.exits[d]).blockedText)
+							Scene(Location, Character)
+							break
+			else:
+				print("You cannot go that way.")
+				Scene(Location, Character)
+	
+	def use(self, Location, Character, Command):##Uses items, duh
+		
+		if(len(Command) > 3):
+			for i in Character.inventory:
+				if i in Command:
+					if(stringToClass(i).bUseable == True):
+							if(stringToClass(i).bUseAlone == True):
+								print(stringToClass(i).useText)
+								checkForEvent(Location, Character, stringToClass(i), "useItem")
+								break
+
+							else:
+								u = input("Use with what? >>>")
+								for x in Character.inventory:
+									if(u.lower() == x):
+										if(stringToClass(i).useWith == x):
+											print(stringToClass(i).useText)
+											checkForEvent(Location, Character, stringToClass(i), "useItem")
+											break
+
+										else:
+											print("You can't use those together.")
+											Scene(Location, Character)
+								for x in Location.contents:
+									if(u.lower() == x):
+										if(stringToClass(i).useWith == x):
+											print(stringToClass(i).useText)
+											checkForEvent(Location, Character, stringToClass(i), "useItem")
+											break
+
+										else:
+											print("You can't use those together.")
+											Scene(Location, Character)
+											break
+								else:
+									print("There isn't a %s here." % (u.lower()))
+									Scene(Location, Character)
+									break
+					else:
+						print("You can't use that.")
 						Scene(Location, Character)
 						break
-		else:
-			print("You cannot go that way.")
-			Scene(Location, Character)
-	
-	def use(self, Location, Character):
-		cmd = input("Use what? >>>")
-		
-		for i in Character.inventory:
-			if(cmd.lower() == i):
-				if(stringToClass(cmd.lower()).bUseable == True):
-					if(stringToClass(cmd.lower()).bUseAlone == True):
-						print(stringToClass(cmd.lower()).useText)
-						checkForEvent(Location, Character, stringToClass(i), "useItem")
+
+			for i in Location.contents:
+				if i in Command:
+					if(stringToClass(i).bUseable == True):
+						if(stringToClass(i).bUseAlone == True):
+							print(stringToClass(i).useText)
+							checkForEvent(Location, Character, stringToClass(i), "useItem")
+							break
+
+						else:
+							u = input("Use with what? >>>")
+							for x in Character.inventory:
+								if(u.lower() == x):
+									if(stringToClass(i).useWith == x):
+										print(stringToClass(i).useText)
+										checkForEvent(Location, Character, stringToClass(i), "useItem")
+										break
+
+									else:
+										print("You can't use those together.")
+										Scene(Location, Character)
+										break
+							for x in Location.contents:
+								if(u.lower() == x):
+									if(stringToClass(i).useWith == x):
+										print(stringToClass(i).useText)
+										checkForEvent(Location, Character, stringToClass(i), "useItem")
+										break
+
+									else:
+										print("You can't use those together.")
+										Scene(Location, Character)
+										break
+							else:
+								print("There isn't a %s here." % (u.lower()))
+								Scene(Location, Character)
+								break
+					else:
+						print("You can't use that.")
+						Scene(Location, Character)
 						break
 
-					else:
-						u = input("Use with what? >>>")
-						for x in Character.inventory:
-							if(u.lower() == x):
-								if(stringToClass(cmd.lower()).useWith == x):
-									print(stringToClass(cmd.lower()).useText)
-									checkForEvent(Location, Character, stringToClass(i), "useItem")
-									break
-
-								else:
-									print("You can't use those together.")
-									Scene(Location, Character)
-						for x in Location.contents:
-							if(u.lower() == x):
-								if(stringToClass(cmd.lower()).useWith == x):
-									print(stringToClass(cmd.lower()).useText)
-									checkForEvent(Location, Character, stringToClass(i), "useItem")
-									break
-
-								else:
-									print("You can't use those together.")
-									Scene(Location, Character)
-									break
-						else:
-							print("There isn't a %s here." % (u.lower()))
-							Scene(Location, Character)
-							break
-				else:
-					print("You can't use that.")
-					Scene(Location, Character)
+			for s in Location.structures:
+				if s in Command:
+					stringToClass(s).useStructure(Location, Character)
 					break
-		
-		for i in Location.contents:
-			if(cmd.lower() == i):
-				if(stringToClass(cmd.lower()).bUseable == True):
-					if(stringToClass(cmd.lower()).bUseAlone == True):
-						print(stringToClass(cmd.lower()).useText)
-						checkForEvent(Location, Character, stringToClass(i), "useItem")
+			
+			else:
+				print("There isn't a %s here." % (cmd.lower()))
+				Scene(Location, Character)
+			
+		else:
+			cmd = input("Use what? >>>")
+			
+			for i in Character.inventory:
+				if(cmd.lower() == i):
+					if(stringToClass(cmd.lower()).bUseable == True):
+						if(stringToClass(cmd.lower()).bUseAlone == True):
+							print(stringToClass(cmd.lower()).useText)
+							checkForEvent(Location, Character, stringToClass(i), "useItem")
+							break
+
+						else:
+							u = input("Use with what? >>>")
+							for x in Character.inventory:
+								if(u.lower() == x):
+									if(stringToClass(cmd.lower()).useWith == x):
+										print(stringToClass(cmd.lower()).useText)
+										checkForEvent(Location, Character, stringToClass(i), "useItem")
+										break
+
+									else:
+										print("You can't use those together.")
+										Scene(Location, Character)
+							for x in Location.contents:
+								if(u.lower() == x):
+									if(stringToClass(cmd.lower()).useWith == x):
+										print(stringToClass(cmd.lower()).useText)
+										checkForEvent(Location, Character, stringToClass(i), "useItem")
+										break
+
+									else:
+										print("You can't use those together.")
+										Scene(Location, Character)
+										break
+							else:
+								print("There isn't a %s here." % (u.lower()))
+								Scene(Location, Character)
+								break
+					else:
+						print("You can't use that.")
+						Scene(Location, Character)
 						break
-
-					else:
-						u = input("Use with what? >>>")
-						for x in Character.inventory:
-							if(u.lower() == x):
-								if(stringToClass(cmd.lower()).useWith == x):
-									print(stringToClass(cmd.lower()).useText)
-									checkForEvent(Location, Character, stringToClass(i), "useItem")
-									break
-
-								else:
-									print("You can't use those together.")
-									Scene(Location, Character)
-									break
-						for x in Location.contents:
-							if(u.lower() == x):
-								if(stringToClass(cmd.lower()).useWith == x):
-									print(stringToClass(cmd.lower()).useText)
-									checkForEvent(Location, Character, stringToClass(i), "useItem")
-									break
-
-								else:
-									print("You can't use those together.")
-									Scene(Location, Character)
-									break
-						else:
-							print("There isn't a %s here." % (u.lower()))
-							Scene(Location, Character)
+			
+			for i in Location.contents:
+				if(cmd.lower() == i):
+					if(stringToClass(cmd.lower()).bUseable == True):
+						if(stringToClass(cmd.lower()).bUseAlone == True):
+							print(stringToClass(cmd.lower()).useText)
+							checkForEvent(Location, Character, stringToClass(i), "useItem")
 							break
-				else:
-					print("You can't use that.")
-					Scene(Location, Character)
-					break
-		
-		for s in Location.structures:
-			if(cmd.lower() == s):
-				stringToClass(s).useStructure(Location, Character)
-				break
-		
-		else:
-			print("There isn't a %s here." % (cmd.lower()))
-			Scene(Location, Character)
 
-	def talk(self, Location, Character):
-		cmd = input("Who do you want to talk to? >>>")
+						else:
+							u = input("Use with what? >>>")
+							for x in Character.inventory:
+								if(u.lower() == x):
+									if(stringToClass(cmd.lower()).useWith == x):
+										print(stringToClass(cmd.lower()).useText)
+										checkForEvent(Location, Character, stringToClass(i), "useItem")
+										break
+
+									else:
+										print("You can't use those together.")
+										Scene(Location, Character)
+										break
+							for x in Location.contents:
+								if(u.lower() == x):
+									if(stringToClass(cmd.lower()).useWith == x):
+										print(stringToClass(cmd.lower()).useText)
+										checkForEvent(Location, Character, stringToClass(i), "useItem")
+										break
+
+									else:
+										print("You can't use those together.")
+										Scene(Location, Character)
+										break
+							else:
+								print("There isn't a %s here." % (u.lower()))
+								Scene(Location, Character)
+								break
+					else:
+						print("You can't use that.")
+						Scene(Location, Character)
+						break
+			
+			for s in Location.structures:
+				if(cmd.lower() == s):
+					stringToClass(s).useStructure(Location, Character)
+					break
+			
+			else:
+				print("There isn't a %s here." % (cmd.lower()))
+				Scene(Location, Character)
+
+	def talk(self, Location, Character, Command):##talk to NPCs and hear the shit they have to say
 		
-		for c in Location.npcs:
-			if(cmd.lower() == c):
-				Conversation(Location, Character, stringToClass(c), "intro")
-				break
+		if(len(Command) > 4):
+			for c in Location.npcs:
+				if c in Command:
+					Conversation(Location, Character, stringToClass(c), "intro")
+					break
 		else:
-			print("You don't see anyone called %s here." % (cmd))
-			Scene(Location, Character)
+			cmd = input("Who do you want to talk to? >>>")
+			
+			for c in Location.npcs:
+				if(cmd.lower() == c):
+					Conversation(Location, Character, stringToClass(c), "intro")
+					break
+			else:
+				print("You don't see anyone called %s here." % (cmd))
+				Scene(Location, Character)
 	
 ###########################
 ##ASSIGN ALL CLASSES HERE##
@@ -848,7 +1085,7 @@ def Scene(Location, Character):##====This is the current scene. All commands and
 	
 	for i in Commands:
 		if(i in cmd.lower()):
-			stingToClassDef(playerCommand, i)(Location, Character)## This is where all player input is passed to the relevant command
+			stingToClassDef(playerCommand, i)(Location, Character, cmd)## This is where all player input is passed to the relevant command
 			
 	else:
 		print("Command not recognised.")
