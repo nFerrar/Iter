@@ -70,7 +70,9 @@ Now with all new NPCs! These guys have names, stats, descriptions, inventories, 
 
 # Known Bugs
 
-Possible shenanigans with containers and their contents spilling into the zone.
+serious shenanigans with containers and their contents spilling into the zone. 
+
+Zones in general are not playing nice when it comes to any of their definitions. Must clean.
 
 # To do, in something resembling an order of priority:
 
