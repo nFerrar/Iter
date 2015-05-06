@@ -96,7 +96,7 @@ class Zone(object):##this is all rooms and areas the player will be in. It has a
 			for i in self.contents:
 				if(self.contents[i] == 1):
 					print(stringToClass(i).name)
-			else:
+				else:
 					print(str(self.contents[i])+ " " + i + "s")
 		else:
 			print("Nothing.")
@@ -159,6 +159,19 @@ class Zone(object):##this is all rooms and areas the player will be in. It has a
 		for i in self.structures:
 			if(i == Structure):
 				self.structures.remove(i)
+				break
+				
+	def addNPC(self, NPC):
+		for c in self.npcs:
+			if(NPC == c):
+				break
+		else:
+			self.npcs.append(NPC)
+	
+	def removeNPC(self, NPC):
+		for c in self.npcs:
+			if(c == NPC):
+				self.npcs.remove(c)
 				break
 	
 class Item(object):##this is a basic item, it has many many variables that cover its name and description and use, along with attached events
@@ -855,7 +868,8 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		if(len(Command) > 4):
 			for c in Location.npcs:
 				if c in Command:
-					Conversation(Location, Character, stringToClass(c), "intro")
+					print(stringToClass(c).Convo["intro"]["introtext"])
+					Conversation(Location, Character, stringToClass(c), stringToClass(c).Convo["intro"])
 					break
 		else:
 			cmd = input("Who do you want to talk to? >>>")
@@ -1036,32 +1050,63 @@ bobPronouns = {
 	"him" : "Him",
 	}
 bobConvo = {
-	"intro" : "'Hi there, my name's Bob and while you may be hoping that I have something interesting to say, I really don't. At all.'",
-	"none" : "'Come again?'",
-	"here" : "'This is onlt a small test area. There are three different locations you can visit...well four technically, but as far as your concerned there are only three. Don't expect much from any of them though.'",
-	"fuck" : "'Watch your profamity.'",
-	"who" : "'I'm Bob, the two dimensional test character who has even less programming behind him than a box. Give me time and I may become a bit more complicated. Until then fuck you and your organic privilege.",
-	"where" : "'This place is just a construct. A framework. Someday it may be a wondrous place of adventure, but right now it is the worldly equivalent of scaffolding held up by google and machete-like practises.'",
-	"goodbye" : "'Get the fuck out.'",
+	"intro" : {
+		"introtext" : "'What can I help you with?'",
+		"none" : "'Come again?'",
+		"who" : {
+			"introtext" : "Who do you want to know about?",
+			"me" : "'You? I don't know. If you can't remember then that's something you may want to look into.'",
+			" i" : "'You? I don't know. If you can't remember then that's something you may want to look into.'",
+			"you" : {
+				"introtext" : "What do you want to know about me?",
+				"who" : "'I'm Bob, the two dimensional test character who has even less programming behind him than a box. Give me time and I may become a bit more complicated. Until then fuck you and your organic privilege.",
+				"where" : "'I'm from nowhere in particular, which is a lovely place this time of year.'",
+				"why" : "'I'm only here because Nic needed a way to test NPCs quickly.'",
+				"how" : "'I got here through the magic of code. I'm also in the wall.'"
+				},
+			},
+		" here" : "'This is only a small test area. There are three different locations you can visit...well four technically, but as far as your concerned there are only three. Don't expect much from any of them though.'",
+		"fuck" : "'Watch your profamity.'",
+		"where" : "'This place is just a construct. A framework. Someday it may be a wondrous place of adventure, but right now it is the worldly equivalent of scaffolding held up by google and machete-like practises.'",
+		"goodbye" : "'Get the fuck out.'",
+		},
 	}
 bob = NPC("Bob", bobPronouns, bobInv, 100, 100, 100, "a short, uninteresting fellow with strange, oddly arranged facial features that you'd think make him easy to remember, but somehow have the opposite effect.", False, "none", "none", bobConvo)
 ## END NPC CREATION ##
 
-def Conversation(Location, Character, NPC, Prompt):##Conversation runtime, separate from Scene(), but will always redirect there upon exit.
-	print(NPC.Convo[Prompt])
+def bDeeper(dictValue):
+	try:
+		x = len(dictValue.keys())
+		return True
+	except:
+		return False
+	
+def Conversation(Location, Character, NPC, stage):
+	##(stage["introtext"])
 	cmd = input(">>>>")
 	
-	for p in NPC.Convo:
-		if(p in cmd.lower()):
-			Conversation(Location, Character, NPC, p)
-			break
+	if(cmd.lower() == "back" or cmd.lower() == "nevermind"):
+		print(NPC.Convo["intro"]["introtext"])
+		Conversation(Location, Character, NPC, NPC.Convo["intro"])
+		
+	if("bye" in cmd.lower() or "leave" in cmd.lower() or "farewell" in cmd.lower()):
+		print(NPC.Convo["intro"]["goodbye"])
+		Scene(Location, Character)
+
+	for i in stage:
+		if i in cmd.lower():
+			if(bDeeper(stage[i]) == True):
+				print(stage[i]["introtext"])
+				Conversation(Location, Character, NPC, stage[i])
+				break
+			else:
+				print(stage[i])
+				Conversation(Location, Character, NPC, stage)
+				break
 	else:
-		if("bye" in cmd.lower() or "leave" in cmd.lower() or "farewell" in cmd.lower()):
-			print(NPC.Convo["goodbye"])
-			Scene(Location, Character)
-		else:
-			print("%s doesn't seem to understand you." % (NPC.name))
-			Conversation(Location, Character, NPC, "none")
+		print("%s looks confused." % (NPC.name))
+		print(NPC.Convo["intro"]["none"])
+		Conversation(Location, Character, NPC, stage)
 
 def checkForEvent(Location, Character, caller, situation):##Call this to check if an event should be run.
 	
