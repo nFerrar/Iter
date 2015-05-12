@@ -2,6 +2,7 @@ import sys
 import os
 import time
 import collections
+import re
 
 class Person(object):##this is a generic person, with a name, inventory and basic add/remove item functions
 	def __init__(self, name, inventory, mind, body, spirit):
@@ -280,28 +281,30 @@ class Structure(object):##Base class for things like doors, walls and pillars of
 							print("That doesn't seem to work.")
 							Scene(Location, Character)
 							break
-						else:
-							print("You don't have a %s." % (cmd.lower()))
-							Scene(Location, Character)
+					else:
+						print("You don't have a %s." % (cmd.lower()))
+						Scene(Location, Character)
 		else:
 			print("You don't see a way to use that.")
 			Scene(Location, Character)
 						
 class Event(object):##these are events, where the majority of the Engines power comes from, events can print, add/remove items to the room and player, and teleport the player to a new location without informing them. Each command can only be used once it seems.
 	
-	def __init__(self, Location, Character, EventActions, EventOrder, Repeat):
+	def __init__(self, Location, Character, EventActions, EventOrder, Repeat, bToConversation, NPC):
 		self.Location = Location
 		self.Character = Character
 		self.EventActions = EventActions
 		self.EventOrder = EventOrder
 		self.Repeat = Repeat
+		self.bToConversation = bToConversation
+		self.NPC = NPC
 		
 	def triggerEvent(self, activeLocation, activeCharacter):##this runs through all the event items
 	
 		self.Location = activeLocation
 		self.Character = activeCharacter
 		
-		if(self.Repeat > 0):
+		if(self.Repeat >= 0):
 			for e in self.EventOrder:
 				if(e != "EVENT"):
 					stingToClassDef(self, e)(self.EventActions[e])
@@ -310,7 +313,10 @@ class Event(object):##these are events, where the majority of the Engines power 
 					self.Repeat -= 1
 					stingToClassDef(stringToClass(self.EventActions[e]), "triggerEvent")(self.Location, self.Character)
 			self.Repeat -= 1
-			Scene(self.Location, self.Character)
+			if(self.bToConversation == False):
+				Scene(self.Location, self.Character)
+			else:
+				Conversation(self.Location, self.Character, stringToClass(self.NPC), stringToClass(self.NPC).Convo["intro"], stringToClass(self.NPC).Convo["intro"])
 		if(self.Repeat <= -1):
 			for e in self.EventOrder:
 				if(e != "EVENT"):
@@ -318,10 +324,16 @@ class Event(object):##these are events, where the majority of the Engines power 
 					time.sleep(0.1)
 				else:
 					stingToClassDef(stringToClass(self.EventActions[e]), "triggerEvent")(self.Location, self.Character)
-			Scene(self.Location, self.Character)
+			if(self.bToConversation == False):
+				Scene(self.Location, self.Character)
+			else:
+				Conversation(self.Location, self.Character, stringToClass(self.NPC), stringToClass(self.NPC).Convo["intro"], stringToClass(self.NPC).Convo["intro"])
 			
 		else:
-			Scene(self.Location, self.Character)
+			if(self.bToConversation == False):
+				Scene(self.Location, self.Character)
+			else:
+				Conversation(self.Location, self.Character, stringToClass(self.NPC), stringToClass(self.NPC).Convo["intro"], stringToClass(self.NPC).Convo["intro"])
 
 	def PRINT(self, text):##Call to print something to screen.
 		print(text)
@@ -370,13 +382,13 @@ class PlayerCommands(object):##These are all the commands the player can perform
 			
 		if(len(Command) > 7):
 			for i in Location.references:
-				if i in Command:
+				if(stringContains(i, Command) == True):
 					Location.examineRoom()
 					checkForEvent(Location, Character, Location, "examineZone")
 					break
 					
 			for i in Location.contents:
-				if i in Command:
+				if(stringContains(i, Command) == True):
 					stringToClass(i).describeItem()
 					if(Location.contents[i] > 1):
 						print("There are " + str(Location.contents[i]) + " of them.")
@@ -384,22 +396,21 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					break
 					
 			for c in Location.npcs:
-				if c in Command:
+				if(stringContains(c, Command) == True):
 					stringToClass(c).describeNPC()
 					checkForEvent(Location, Character, stringToClass(c), "examineNPC")
 					break
 					
 			for i in Player.inventory:
-				if i in Command:
+				if(stringContains(i, Command) == True):
 					stringToClass(i).describeItem()
 					if(Player.inventory[i] > 1):
 						print("You are carrying " + str(Player.inventory[i]) + " of them.")
 					checkForEvent(Location, Character, stringToClass(i), "examineItem")
 					break
-
 						
 			for s in Location.structures:
-				if s in Command:
+				if(stringContains(s, Commands) == True):
 					stringToClass(s).examineStructure(Location, Character)
 					break
 			
@@ -467,7 +478,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 			
 		if(len(Command) > 4):
 			for i in Location.contents:
-				if i in Command:
+				if(stringContains(i, Command) == True):
 					if hasattr(stringToClass(i), "bOpen"):
 						if(stringToClass(i).bOpen == False):
 							stringToClass(i).openContainer(Location, Character)
@@ -506,7 +517,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 			
 		if(len(Command) > 5):
 			for i in Location.contents:
-				if i in Command:
+				if(stringContains(i, Command) == True):
 					if hasattr(stringToClass(i), "bOpen"):
 						if(stringToClass(i).bOpen == True):
 							stringToClass(i).closeContainer(Location, Character)
@@ -543,7 +554,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 			
 		if(len(Command) > 4):
 			for l in Location.contents:
-				if l in Command:
+				if(stringContains(l, Command) == True):
 					if(stringToClass(l).bPickUp == True):
 						Character.addToInventory(l, Location.contents[l])
 						Location.removeItem(l, Location.contents[l])
@@ -576,7 +587,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		
 		if(len(Command) > 4):
 			for l in Character.inventory:
-				if l in Command:
+				if(stringContains(l, Command) == True):
 					q = input("Drop how many? >>>")
 						
 					try:
@@ -621,7 +632,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		
 		if(len(Command) > 4):
 			for d in Location.exits:
-				if d in Command:
+				if(stringContains(d, Command) == True):
 					if(stringToClass(Location.exits[d]).bLocked == False):
 							ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
 							break
@@ -677,11 +688,11 @@ class PlayerCommands(object):##These are all the commands the player can perform
 				print("You cannot go that way.")
 				Scene(Location, Character)
 	
-	def use(self, Location, Character, Command):##Uses items, duh
+	def use(self, Location, Character, Command):##Uses items, duh ISSUE HERE WITH THE SECOND USE WITH WHAT COMMAND NOT INTELLIGENT
 		
 		if(len(Command) > 3):
 			for i in Character.inventory:
-				if i in Command:
+				if(stringContains(i, Command) == True):
 					if(stringToClass(i).bUseable == True):
 							if(stringToClass(i).bUseAlone == True):
 								print(stringToClass(i).useText)
@@ -691,7 +702,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 							else:
 								u = input("Use with what? >>>")
 								for x in Character.inventory:
-									if(u.lower() == x):
+									if(stringContains(x, u) == True):
 										if(stringToClass(i).useWith == x):
 											print(stringToClass(i).useText)
 											checkForEvent(Location, Character, stringToClass(i), "useItem")
@@ -701,7 +712,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 											print("You can't use those together.")
 											Scene(Location, Character)
 								for x in Location.contents:
-									if(u.lower() == x):
+									if(stringContains(x, u) == True):
 										if(stringToClass(i).useWith == x):
 											print(stringToClass(i).useText)
 											checkForEvent(Location, Character, stringToClass(i), "useItem")
@@ -721,7 +732,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 						break
 
 			for i in Location.contents:
-				if i in Command:
+				if(stringContains(i, Command) == True):
 					if(stringToClass(i).bUseable == True):
 						if(stringToClass(i).bUseAlone == True):
 							print(stringToClass(i).useText)
@@ -731,7 +742,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 						else:
 							u = input("Use with what? >>>")
 							for x in Character.inventory:
-								if(u.lower() == x):
+								if(stringContains(x, u) == True):
 									if(stringToClass(i).useWith == x):
 										print(stringToClass(i).useText)
 										checkForEvent(Location, Character, stringToClass(i), "useItem")
@@ -742,7 +753,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 										Scene(Location, Character)
 										break
 							for x in Location.contents:
-								if(u.lower() == x):
+								if(stringContains(x, u) == True):
 									if(stringToClass(i).useWith == x):
 										print(stringToClass(i).useText)
 										checkForEvent(Location, Character, stringToClass(i), "useItem")
@@ -762,13 +773,10 @@ class PlayerCommands(object):##These are all the commands the player can perform
 						break
 
 			for s in Location.structures:
-				if s in Command:
+				if(stringContains(s, Command) == True):
 					stringToClass(s).useStructure(Location, Character)
 					break
 			
-			else:
-				print("There isn't a %s here." % (cmd.lower()))
-				Scene(Location, Character)
 			
 		else:
 			cmd = input("Use what? >>>")
@@ -867,16 +875,17 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		
 		if(len(Command) > 4):
 			for c in Location.npcs:
-				if c in Command:
-					print(stringToClass(c).Convo["intro"]["introtext"])
-					Conversation(Location, Character, stringToClass(c), stringToClass(c).Convo["intro"])
+				if(stringContains(c, Command) == True):
+					print("<<" + stringToClass(c).name + "<<" + stringToClass(c).Convo["intro"]["introtext"])
+					Conversation(Location, Character, stringToClass(c), stringToClass(c).Convo["intro"], stringToClass(c).Convo["intro"])
 					break
 		else:
 			cmd = input("Who do you want to talk to? >>>")
 			
 			for c in Location.npcs:
 				if(cmd.lower() == c):
-					Conversation(Location, Character, stringToClass(c), "intro")
+					print(stringToClass(c).Convo["intro"]["introtext"])
+					Conversation(Location, Character, stringToClass(c), stringToClass(c).Convo["intro"], stringToClass(c).Convo["intro"])
 					break
 			else:
 				print("You don't see anyone called %s here." % (cmd))
@@ -907,21 +916,21 @@ testEventActions = {
 	"ADDITEM" : "wallet",
 	}
 testEventOrder = ["PRINT", "ADDTOINVENTORY", "ADDITEM"]
-testEvent = Event("none", "none", testEventActions, testEventOrder, -1)
+testEvent = Event("none", "none", testEventActions, testEventOrder, -1, False, "none")
 
 boxEventActions = {
 	"PRINT" : "You somehow manage to pinch your fingers as you close it, man it would be stupid if you did that every time you closed this box...",
 	"EVENT" : "secondEvent",
 	}
 boxEventOrder = ["PRINT", "EVENT"]
-boxEvent = Event("none", "none", boxEventActions, boxEventOrder,  2)
+boxEvent = Event("none", "none", boxEventActions, boxEventOrder,  2, False, "none")
 
 secondEventAction = {
 	"PRINT" : "Turns out you can trigger events from events. This is good news.",
 	"WAIT" : "And you are restricted to a single instance of each operation per event. So long, complicated events will have to be split up between multiple events. This is a pain."
 	}
 secondEventOrder = ["PRINT", "WAIT"]
-secondEvent = Event("none", "none", secondEventAction, secondEventOrder, 1)
+secondEvent = Event("none", "none", secondEventAction, secondEventOrder, 1, False, "none")
 
 bulbEventActions = {
 	"ADDTOINVENTORY" : "lightbulb",
@@ -930,7 +939,7 @@ bulbEventActions = {
 	"WAIT" : "However, in the dark, you notice a strange, thin line of light coming off the wall. If you could see you might be able to go and investigate.",
 	}
 bulbEventOrder = ["ADDTOINVENTORY", "TELEPORT", "PRINT", "WAIT"]
-bulbEvent = Event("none", "none", bulbEventActions, bulbEventOrder, -1)
+bulbEvent = Event("none", "none", bulbEventActions, bulbEventOrder, -1, False, "none")
 
 socketEventActions = {
 	"REMOVEFROMINVENTORY" : "lightbulb",
@@ -939,19 +948,19 @@ socketEventActions = {
 	"ADDSTRUCTURE" : "wall",
 	} 
 socketEventOrder = ["REMOVEFROMINVENTORY", "TELEPORT", "PRINT", "ADDSTRUCTURE"]
-socketEvent = Event("none", "none", socketEventActions, socketEventOrder, -1)
+socketEvent = Event("none", "none", socketEventActions, socketEventOrder, -1, False, "none")
 
 dropClothesEventActions = {
 	"PRINT" : "You feel a little cold without your clothes on, and you doubt you'll be able to engage in decent society if you don't remedy the situation.",
 	}
 dropEventOrder = ["PRINT",]
-dropClothesEvent = Event("none", "none", dropClothesEventActions, dropEventOrder, -1)
+dropClothesEvent = Event("none", "none", dropClothesEventActions, dropEventOrder, -1, False, "none")
 
 pickupKeyEventActions = {
 	"PRINT" : "As you hold the key in your hand, you get a sense of great...contextual importance."
 	}
 pickupKeyEventOrder = ["PRINT",]
-pickupKeyEvent = Event("none", "none", pickupKeyEventActions, pickupKeyEventOrder, -1)
+pickupKeyEvent = Event("none", "none", pickupKeyEventActions, pickupKeyEventOrder, -1, False, "none")
 
 hiddenDoorEventActions = {
 	"PRINT" : "As you apply some pressure to the wall, there is a creak, thunk, and rattle as the section of wall shifts back and rises up into the ceiling in a shower of dust, revealing a small exit to the east.",
@@ -959,7 +968,26 @@ hiddenDoorEventActions = {
 	"REMOVESTRUCTURE" : "wall",
 	}
 hiddenDoorEventOrder = ["PRINT", "ADDEXIT", "REMOVESTRUCTURE"]
-hiddenDoorEvent = Event("none", "none", hiddenDoorEventActions, hiddenDoorEventOrder, 1)
+hiddenDoorEvent = Event("none", "none", hiddenDoorEventActions, hiddenDoorEventOrder, 1, False, "none")
+
+bobFuckEventActions = {
+	"PRINT" : "<<Bob<<'Why you gotta be so rude?'",
+	}
+bobFuckEventOrder = ["PRINT"]
+bobFuckEvent = Event("none", "none", bobFuckEventActions, bobFuckEventOrder, -1, True, "bob")
+
+bobMeEventActons = {
+	"PRINT" : "<<Bob<<'You know, these kind of things wouldn't happen in a modern RPG.'",
+	}
+bobMeEventOrder = ["PRINT"]
+bobMeEvent = Event("none", "none", bobMeEventActons, bobMeEventOrder, -1, True, "bob")
+
+bobHowEventActions = {
+	"PRINT" : "Bob seems to sigh deeply and stares at you with his dead little eyes. It's incredibly awkward.",
+	"WAIT" : "He just keeps staring.....",
+	}
+bobHowEventOrder = ["PRINT", "WAIT"]
+bobHowEvent = Event("none", "none", bobHowEventActions, bobFuckEventOrder, -1, True, "bob")
 ## END EVENT ASSIGNMENTS ##
 
 ## BEGIN ITEM ASSIGNMENTS ##
@@ -1052,11 +1080,11 @@ bobPronouns = {
 bobConvo = {
 	"intro" : {
 		"introtext" : "'What can I help you with?'",
-		"none" : "'Come again?'",
+		"none" : "'I'm sorry. My responses are limited, you must ask the right questions.'",
 		"who" : {
 			"introtext" : "Who do you want to know about?",
 			"me" : "'You? I don't know. If you can't remember then that's something you may want to look into.'",
-			" i" : "'You? I don't know. If you can't remember then that's something you may want to look into.'",
+			"i" : "'You? I don't know. If you can't remember then that's something you may want to look into.'",
 			"you" : {
 				"introtext" : "What do you want to know about me?",
 				"who" : "'I'm Bob, the two dimensional test character who has even less programming behind him than a box. Give me time and I may become a bit more complicated. Until then fuck you and your organic privilege.",
@@ -1065,49 +1093,86 @@ bobConvo = {
 				"how" : "'I got here through the magic of code. I'm also in the wall.'"
 				},
 			},
-		" here" : "'This is only a small test area. There are three different locations you can visit...well four technically, but as far as your concerned there are only three. Don't expect much from any of them though.'",
+		"here" : "'This is only a small test area. There are three different locations you can visit...well four technically, but as far as your concerned there are only three. Don't expect much from any of them though.'",
 		"fuck" : "'Watch your profamity.'",
 		"where" : "'This place is just a construct. A framework. Someday it may be a wondrous place of adventure, but right now it is the worldly equivalent of scaffolding held up by google and machete-like practises.'",
 		"goodbye" : "'Get the fuck out.'",
 		},
 	}
-bob = NPC("Bob", bobPronouns, bobInv, 100, 100, 100, "a short, uninteresting fellow with strange, oddly arranged facial features that you'd think make him easy to remember, but somehow have the opposite effect.", False, "none", "none", bobConvo)
+bobEvent = {
+	"fuck" : "bobFuckEvent",
+	"me" : "bobMeEvent",
+	"how" : "bobHowEvent",
+	}
+bob = NPC("Bob", bobPronouns, bobInv, 100, 100, 100, "a short, uninteresting fellow with strange, oddly arranged facial features that you'd think make him easy to remember, but somehow have the opposite effect.", True, "none", bobEvent, bobConvo)
 ## END NPC CREATION ##
 
-def bDeeper(dictValue):
+def stringContainsb(word, phrase):##this guy finds a word in a phrase, and can be asked in a manner consistent with the rest of python.
+	if(findWord(word)(phrase.lower())):
+		return True
+	else:
+		return False
+
+def findWord(w):##This guy finds if a word is in a phrase, intelligently
+    return re.compile(r'\b({0})\b'.format(w), flags=re.IGNORECASE).search
+
+def bDeeper(dictValue):##This checks if there i a deeper level of conversation
 	try:
 		x = len(dictValue.keys())
 		return True
 	except:
 		return False
 	
-def Conversation(Location, Character, NPC, stage):
-	##(stage["introtext"])
-	cmd = input(">>>>")
+def Conversation(Location, Character, NPC, stage, previousStage):##conversation 'scene'. KISS STRIKES AGAIN, WAIT EVENT NOT WORKING
+
+	form = "[intro]"
+	subform = ""
+	
+	cmd = input(">>Say>>")
 	
 	if(cmd.lower() == "back" or cmd.lower() == "nevermind"):
-		print(NPC.Convo["intro"]["introtext"])
-		Conversation(Location, Character, NPC, NPC.Convo["intro"])
+		print("<<" + NPC.name + "<<" + previousStage["introtext"])
+		Conversation(Location, Character, NPC, previousStage, NPC.Convo["intro"])
 		
 	if("bye" in cmd.lower() or "leave" in cmd.lower() or "farewell" in cmd.lower()):
-		print(NPC.Convo["intro"]["goodbye"])
+		print("<<" + NPC.name + "<<" + NPC.Convo["intro"]["goodbye"])
 		Scene(Location, Character)
 
 	for i in stage:
-		if i in cmd.lower():
+		if(stringContains(i, cmd.lower()) == True):
 			if(bDeeper(stage[i]) == True):
-				print(stage[i]["introtext"])
-				Conversation(Location, Character, NPC, stage[i])
-				break
+				print("<<" + NPC.name + "<<" + stage[i]["introtext"])
+				if(NPC.bEvent == False):
+					Conversation(Location, Character, NPC, stage[i], stage)
+					break
+				else:
+					for e in NPC.Event.keys():
+						if(i in e):
+							stringToClass(NPC.Event[e]).triggerEvent(Location, Character)
+							break
+					else:
+						Conversation(Location, Character, NPC, stage[i], stage)
+						break
+					
 			else:
-				print(stage[i])
-				Conversation(Location, Character, NPC, stage)
-				break
+				if(NPC.bEvent == False):
+					print("<<" + NPC.name + "<<" + stage[i])
+					Conversation(Location, Character, NPC, stage, previousStage)
+					break
+				else:
+					print("<<" + NPC.name + "<<" + stage[i])
+					for e in NPC.Event:
+						if(i in e):##+++++++++++++++++++++++++++++++++++++++++++CLOSER
+							stringToClass(NPC.Event[e]).triggerEvent(Location, Character)
+							break
+					else:
+						Conversation(Location, Character, NPC, stage, previousStage)
+						break
 	else:
 		print("%s looks confused." % (NPC.name))
-		print(NPC.Convo["intro"]["none"])
-		Conversation(Location, Character, NPC, stage)
-
+		print("<<" + NPC.name + "<<" + NPC.Convo["intro"]["none"])
+		Conversation(Location, Character, NPC, stage, previousStage)
+				
 def checkForEvent(Location, Character, caller, situation):##Call this to check if an event should be run.
 	
 	if(caller.bEvent == True):
@@ -1129,7 +1194,7 @@ def Scene(Location, Character):##====This is the current scene. All commands and
 	cmd = input(">>>")
 	
 	for i in Commands:
-		if(i in cmd.lower()):
+		if(stringContains(i, cmd)):
 			stingToClassDef(playerCommand, i)(Location, Character, cmd)## This is where all player input is passed to the relevant command
 			
 	else:
