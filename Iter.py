@@ -988,6 +988,13 @@ bobHowEventActions = {
 	}
 bobHowEventOrder = ["PRINT", "WAIT"]
 bobHowEvent = Event("none", "none", bobHowEventActions, bobFuckEventOrder, -1, True, "bob")
+
+bobLightsEventActions = {
+	"PRINT" : "<<Bob<<'Turn the fucking light back on you fuckwit.'",
+	"WAIT" : "His voice carries the implication of violence.",
+	}
+bobLighsEventOrder = ["PRINT", "WAIT"]
+bobLightsEvent = Event("none", "none", bobLightsEventActions, bobLighsEventOrder, -1, False, "none")
 ## END EVENT ASSIGNMENTS ##
 
 ## BEGIN ITEM ASSIGNMENTS ##
@@ -1053,7 +1060,7 @@ DarkTestRoomContents = {
 DarkTestRoomExits = {}
 DarkTestRoomStructures = []
 DarkTestRoomNPCs = []
-DarkTestRoom = Zone("Test Room", DarkTestRoomReferences, DarkTestRoomDescription, DarkTestRoomContents, DarkTestRoomExits, False, "none", "none", "none", False, "none", False, "none", "none", DarkTestRoomStructures, DarkTestRoomNPCs)
+DarkTestRoom = Zone("Test Room", DarkTestRoomReferences, DarkTestRoomDescription, DarkTestRoomContents, DarkTestRoomExits, False, "none", "none", "none", False, "none", True, "searchZone", bobLightsEvent, DarkTestRoomStructures, DarkTestRoomNPCs)
 
 TestSecretRoomReferences = ["room", "zone", "area", "surroundings",]
 TestSecretRoomDescrption = "a tiny room, with more in common with a closet than an actual room."
@@ -1107,8 +1114,8 @@ bobEvent = {
 bob = NPC("Bob", bobPronouns, bobInv, 100, 100, 100, "a short, uninteresting fellow with strange, oddly arranged facial features that you'd think make him easy to remember, but somehow have the opposite effect.", True, "none", bobEvent, bobConvo)
 ## END NPC CREATION ##
 
-def stringContainsb(word, phrase):##this guy finds a word in a phrase, and can be asked in a manner consistent with the rest of python.
-	if(findWord(word)(phrase.lower())):
+def stringContains(word, phrase):##this guy finds a word in a phrase, and can be asked in a manner consistent with the rest of python.
+	if(findWord(word)(phrase)):
 		return True
 	else:
 		return False
@@ -1124,9 +1131,6 @@ def bDeeper(dictValue):##This checks if there i a deeper level of conversation
 		return False
 	
 def Conversation(Location, Character, NPC, stage, previousStage):##conversation 'scene'. KISS STRIKES AGAIN, WAIT EVENT NOT WORKING
-
-	form = "[intro]"
-	subform = ""
 	
 	cmd = input(">>Say>>")
 	
@@ -1134,7 +1138,7 @@ def Conversation(Location, Character, NPC, stage, previousStage):##conversation 
 		print("<<" + NPC.name + "<<" + previousStage["introtext"])
 		Conversation(Location, Character, NPC, previousStage, NPC.Convo["intro"])
 		
-	if("bye" in cmd.lower() or "leave" in cmd.lower() or "farewell" in cmd.lower()):
+	if("bye" in cmd.lower() or stringContains("leave", cmd) == True or "farewell" in cmd.lower()):
 		print("<<" + NPC.name + "<<" + NPC.Convo["intro"]["goodbye"])
 		Scene(Location, Character)
 
@@ -1174,8 +1178,9 @@ def Conversation(Location, Character, NPC, stage, previousStage):##conversation 
 		Conversation(Location, Character, NPC, stage, previousStage)
 				
 def checkForEvent(Location, Character, caller, situation):##Call this to check if an event should be run.
-	
+
 	if(caller.bEvent == True):
+
 		if(caller.Trigger == situation):
 			caller.Event.triggerEvent(Location, Character)
 		else:
@@ -1194,7 +1199,7 @@ def Scene(Location, Character):##====This is the current scene. All commands and
 	cmd = input(">>>")
 	
 	for i in Commands:
-		if(stringContains(i, cmd)):
+		if(stringContains(i, cmd) == True):
 			stingToClassDef(playerCommand, i)(Location, Character, cmd)## This is where all player input is passed to the relevant command
 			
 	else:
