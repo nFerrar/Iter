@@ -49,7 +49,8 @@ Events System! Items and zones can have Evens tagged to them, which can be trigg
 - picking up
 - dropping
 
-and they can be limited to running once or infinitly. Numbered running still to come.
+and they can be limited to running once or a set number of times. Or infintly.
+
 A limitation of the events system is that currently each action can only be performed once per event, however this can be cicumvented as events can trigger other events.
 
 Three types of things!
@@ -70,13 +71,9 @@ Now with all new NPCs! These guys have names, stats, descriptions, inventories, 
 
 # Known Bugs
 
-serious shenanigans with containers and their contents spilling into the zone. 
-
-Zones in general are not playing nice when it comes to any of their definitions. Must clean.
+None! How did this happen? Is it a bug?
 
 # To do, in something resembling an order of priority:
-
-still some quantity issue
 
 Add functionality for NPC inventories and deeper conversation trees that can !trigger events!
 
