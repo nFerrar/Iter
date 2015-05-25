@@ -51,6 +51,8 @@ Events System! Items and zones can have Evens tagged to them, which can be trigg
 
 and they can be limited to running once or a set number of times. Or infintly.
 
+ALL NEW! You can now randomise events! Super grindy gameplay can now be implemented. yay.
+
 A limitation of the events system is that currently each action can only be performed once per event, however this can be cicumvented as events can trigger other events.
 
 Three types of things!
@@ -79,6 +81,6 @@ Add functionality for NPC inventories and deeper conversation trees that can !tr
 
 Combat System.
 
-Fix Events so that parts can be done in order and multiple times.
+Rebuild events to be more smarter when handling quantities.
 
 ?Quest System?
