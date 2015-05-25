@@ -3,6 +3,7 @@ import os
 import time
 import collections
 import re
+import random
 
 class Person(object):##this is a generic person, with a name, inventory and basic add/remove item functions
 	def __init__(self, name, inventory, mind, body, spirit):
@@ -290,6 +291,8 @@ class Structure(object):##Base class for things like doors, walls and pillars of
 						
 class Event(object):##these are events, where the majority of the Engines power comes from, events can print, add/remove items to the room and player, and teleport the player to a new location without informing them. Each command can only be used once it seems.
 	
+	activeNPC = "none"
+	
 	def __init__(self, Location, Character, EventActions, EventOrder, Repeat, bToConversation, NPC):
 		self.Location = Location
 		self.Character = Character
@@ -307,11 +310,15 @@ class Event(object):##these are events, where the majority of the Engines power 
 		if(self.Repeat >= 0):
 			for e in self.EventOrder:
 				if(e != "EVENT"):
-					stingToClassDef(self, e)(self.EventActions[e])
-					time.sleep(0.1)
+					if(e != "RANDOMEVENT"):
+						stringToClassDef(self, e)(self.EventActions[e])
+						time.sleep(0.1)
+					else:
+						self.Repeat -= 1
+						stringToClassDef(self, e)(self.EventActions[e])
 				else:
 					self.Repeat -= 1
-					stingToClassDef(stringToClass(self.EventActions[e]), "triggerEvent")(self.Location, self.Character)
+					stringToClassDef(stringToClass(self.EventActions[e]), "triggerEvent")(self.Location, self.Character)
 			self.Repeat -= 1
 			if(self.bToConversation == False):
 				Scene(self.Location, self.Character)
@@ -320,10 +327,14 @@ class Event(object):##these are events, where the majority of the Engines power 
 		if(self.Repeat <= -1):
 			for e in self.EventOrder:
 				if(e != "EVENT"):
-					stingToClassDef(self, e)(self.EventActions[e])
-					time.sleep(0.1)
+					if(e != "RANDOMEVENT"):
+						stringToClassDef(self, e)(self.EventActions[e])
+						time.sleep(0.1)
+					else:
+						self.Repeat -= 1
+						stringToClassDef(self, e)(self.EventActions[e])
 				else:
-					stingToClassDef(stringToClass(self.EventActions[e]), "triggerEvent")(self.Location, self.Character)
+					stringToClassDef(stringToClass(self.EventActions[e]), "triggerEvent")(self.Location, self.Character)
 			if(self.bToConversation == False):
 				Scene(self.Location, self.Character)
 			else:
@@ -370,6 +381,28 @@ class Event(object):##these are events, where the majority of the Engines power 
 	def REMOVESTRUCTURE(self, structure):## Removes a structure from the room.
 		self.Location.removeStucture(structure)
 	
+	def ADDNPC(self, NPC):##Adds NPC to zone
+		self.Location.addNPC(NPC)
+		
+	def REMOVENPC(self, NPC):##Removes an NPC from the zone
+		self.Location.removeNPC(NPC)
+	
+	def SETACTIVENPC(self, NPC):##Sets the active NPC, so the NPC can be interacted with specifically.
+		activeNPC = NPC
+	
+	def ADDTONPCINVENTORY(self, item):##Adds item to the active NPCs inventory
+		if(activeNPC != "none"):
+			stringToClass(activeNPC).addToInventory(item, 1)
+		else:
+			print("No active NPC set in event.")
+	
+	def REMOVEFROMACTIVENPCINVENTORY(self, item):##Removes item from active NPC inventory.
+		if(activeNPC != "none"):
+			stringToClass(activeNPC).removeFromInventory(item, 1)
+
+	def RANDOMEVENT(self, eventList):##Rolls through a list of events and picks one at random.
+		stringToClassDef(stringToClass(eventList[random.randint(0, len(eventList)-1)]), "triggerEvent")(self.Location, self.Character)
+			
 class PlayerCommands(object):##These are all the commands the player can perform, they are as dynamic as possible.
 	def __init__(self):
 		pass
@@ -995,6 +1028,31 @@ bobLightsEventActions = {
 	}
 bobLighsEventOrder = ["PRINT", "WAIT"]
 bobLightsEvent = Event("none", "none", bobLightsEventActions, bobLighsEventOrder, -1, False, "none")
+
+randEvent1Actions = {
+	"PRINT" : "Random Event 1",
+	}
+randEvent1Order = ["PRINT"]
+randEvent1 = Event("none", "none", randEvent1Actions, randEvent1Order, -1, False, "none")
+
+randEvent2Actions = {
+	"PRINT" : "Random Event 2",
+	}
+randEvent2Order = ["PRINT"]
+randEvent2 = Event("none", "none", randEvent2Actions, randEvent2Order, -1, False, "none")
+
+randEvent3Actions = {
+	"PRINT" : "Random Event 3",
+	}
+randEvent3Order = ["PRINT"]
+randEvent3 = Event("none", "none", randEvent3Actions, randEvent3Order, -1, False, "none")
+
+rollEventActions = {
+	"PRINT" : "Rolling random Event...",
+	"RANDOMEVENT" : ["randEvent1", "randEvent2", "randEvent3",],
+	}
+rollEventOrder = ["PRINT", "RANDOMEVENT",]
+rollEvent = Event("none", "none", rollEventActions, rollEventOrder, 1, False, "none")
 ## END EVENT ASSIGNMENTS ##
 
 ## BEGIN ITEM ASSIGNMENTS ##
@@ -1038,7 +1096,7 @@ TestRoomExits = {
 	}
 TestRoomStructures = []
 TestRoomNPCs = ["bob"]
-TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits, False, "none", "Not Locked, this is an error.", "Wasn't locked, this is an error.", False, "No key item, this is an error.", False, "none, error", "none", TestRoomStructures, TestRoomNPCs)
+TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits, False, "none", "Not Locked, this is an error.", "Wasn't locked, this is an error.", False, "No key item, this is an error.", True, "enterZone", rollEvent, TestRoomStructures, TestRoomNPCs)
 
 TestHallReferences = ["room", "hall", "corridor", "area", "zone", "surroundings",]
 TestHallDescription = "a long, seemingly endless hallway. No matter how far you walk down it's length the door you came in through is always right behind you."
@@ -1200,7 +1258,7 @@ def Scene(Location, Character):##====This is the current scene. All commands and
 	
 	for i in Commands:
 		if(stringContains(i, cmd) == True):
-			stingToClassDef(playerCommand, i)(Location, Character, cmd)## This is where all player input is passed to the relevant command
+			stringToClassDef(playerCommand, i)(Location, Character, cmd)## This is where all player input is passed to the relevant command
 			
 	else:
 		print("Command not recognised.")
@@ -1218,7 +1276,7 @@ def boot():##=========================Just the boot screen
 def stringToClass(str):##This is meant to turn strings into class names.
 	return getattr(sys.modules[__name__], str)
 
-def stingToClassDef(className, defName):##This takes strings and makes them a def name within a class. className.defName is the result. can be handed arguments
+def stringToClassDef(className, defName):##This takes strings and makes them a def name within a class. className.defName is the result. can be handed arguments
 	return getattr(className, defName)
 	
 boot()##====================the only base level command if at all possible.
