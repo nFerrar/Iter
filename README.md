@@ -55,6 +55,10 @@ ALL NEW! You can now randomise events! Super grindy gameplay can now be implemen
 
 A limitation of the events system is that currently each action can only be performed once per event, however this can be cicumvented as events can trigger other events.
 
+ALL NEW COMBAT SYSTEM
+
+Currently bare bones, you can now be attacked by agressive NPCs. Along with basic attacks, you can also attack an enemys Mind or Spirit. You can also define mutiple attack desciprtions for both the enemies and the player.
+
 Three types of things!
 
 - Items:
@@ -73,13 +77,13 @@ Now with all new NPCs! These guys have names, stats, descriptions, inventories, 
 
 # Known Bugs
 
-None! How did this happen? Is it a bug?
+Either south door in test room or navigation and key items broken. pending investigation.
 
 # To do, in something resembling an order of priority:
 
 Add functionality for NPC inventories and deeper conversation trees that can !trigger events!
 
-Combat System.
+Enhance the Combat System.
 
 Rebuild events to be more smarter when handling quantities.
 
