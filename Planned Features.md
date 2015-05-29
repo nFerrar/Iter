@@ -1,9 +1,18 @@
+NPC Interaction
+---
+
+Give and take items.
+
 Combat System
 ---
 
-Different Stat Attacks
+Consequences,
 
-NPC Aggression
+Better attack controls,
+
+Defence action,
+
+Loot,
 
 Enhanced Events
 ---
