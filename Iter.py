@@ -6,12 +6,16 @@ import re
 import random
 
 class Person(object):##this is a generic person, with a name, inventory and basic add/remove item functions
-	def __init__(self, name, inventory, mind, body, spirit):
+	def __init__(self, name, inventory, Mind, Body, Spirit, HP, SP, MP, Attacks):
 		self.name = name
 		self.inventory = inventory
-		self.mind = mind
-		self.body = body
-		self.spirit = spirit
+		self.Mind = Mind
+		self.Body = Body
+		self.Spirit = Spirit
+		self.HP = HP
+		self.SP = SP
+		self.MP = MP
+		self.Attacks = Attacks
 	
 	def addToInventory(self, newItem, quantity):
 		for i in self.inventory:
@@ -46,18 +50,23 @@ class PC(Person):##this is the player character class, it adds a checkInventory 
 				print(str(i))
 
 class NPC(Person):##NPCs. Anything other than the player.
-	def __init__(self, name, pronouns, inventory, mind, body, spirit, description, bEvent, Trigger, Event, Convo):
+	def __init__(self, name, pronouns, inventory, Mind, Body, Spirit, HP, SP, MP, description, bEvent, Trigger, Event, Convo, bAggressive, Attacks):
 		self.name = name
 		self.pronouns = pronouns
 		self.inventory = inventory
-		self.mind = mind
-		self.body = body
-		self.spirit = spirit
+		self.Mind = Mind
+		self.Body = Body
+		self.Spirit = Spirit
+		self.HP = HP
+		self.SP = SP
+		self.MP = MP
 		self.description = description
 		self.bEvent = bEvent
 		self.Trigger = Trigger
 		self.Event = Event
 		self.Convo = Convo
+		self.bAggressive = bAggressive
+		self.Attacks = Attacks
 		
 	def describeNPC(self):
 		print("%s is %s" % (self.name, self.description))
@@ -935,11 +944,16 @@ playerCommand = PlayerCommands()
 
 ## BEGIN PLAYER CREATION ##
 pInv = {
-		"clothing" : 1,
-		"wallet" : 1,
-		"shin" : 30,
-		}
-Player = PC("Dickbutt", pInv, 100, 100, 100)
+	"clothing" : 1,
+	"wallet" : 1,
+	"shin" : 30,
+	}
+playerAttacks = {
+	"HP": ["You strike out at the enemy,", "With a yell you batter your opponent with a series of blows,"],
+	"SP" : ["You yell in an attempt intimidate the enemy,", "You sling a slew of insults at your opponent,"],
+	"MP" : ["Summoning your inner reserves, you focus energy at your enemy,", "You thrust forward your arm, letting out a stream of energy,"]
+	}
+Player = PC("Dickbutt", pInv, 10, 10, 10, 100, 100, 100, playerAttacks)
 ## END PLAYER CREATION ##
 
 ## BEGIN EVENT ASSIGNMENTS ##
@@ -1095,7 +1109,7 @@ TestRoomExits = {
 	"south" : "TestHall",
 	}
 TestRoomStructures = []
-TestRoomNPCs = ["bob"]
+TestRoomNPCs = ["grue"]
 TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits, False, "none", "Not Locked, this is an error.", "Wasn't locked, this is an error.", False, "No key item, this is an error.", True, "enterZone", rollEvent, TestRoomStructures, TestRoomNPCs)
 
 TestHallReferences = ["room", "hall", "corridor", "area", "zone", "surroundings",]
@@ -1169,7 +1183,31 @@ bobEvent = {
 	"me" : "bobMeEvent",
 	"how" : "bobHowEvent",
 	}
-bob = NPC("Bob", bobPronouns, bobInv, 100, 100, 100, "a short, uninteresting fellow with strange, oddly arranged facial features that you'd think make him easy to remember, but somehow have the opposite effect.", True, "none", bobEvent, bobConvo)
+bob = NPC("Bob", bobPronouns, bobInv, 10, 10, 10, 100, 100, 100, "a short, uninteresting fellow with strange, oddly arranged facial features that you'd think make him easy to remember, but somehow have the opposite effect.", True, "none", bobEvent, bobConvo, False, playerAttacks)
+
+grueInv = {
+	"shin" : 10,
+	}
+gruePronouns = {
+	"he" : "it",
+	"his" : "its",
+	"him" : "it",
+	}
+grueConvo = {}
+grueEvents = {
+	"playerHP_Victory" : 0,
+	"playerHP_Lose" : 1,
+	"playerSP_Victory" : 2,
+	"playerSP_Lose" : 3,
+	"playerMP_Victory" : 4,
+	"playerMP_Lose" : 5,	
+	}
+grueAttacks = {
+	"HP" : ["The Grue lashes out with it's claws.", "The Grue viciously headbutts you.",],
+	"SP" : ["With a quick action the Grue slings sand and dirt into your face.", "The Grue flashe it's version of genitals at you. You won't be able to get THST image out of your head for a while.",],
+	"MP" : ["The Grue briefly closes its eyes in an expression of focus and you feel a bolt of pain throughout your body.", "The Grue slings a small bottle at you, which shatters mid-air, coating you in a mist of liquid, leaving you groggy."]
+	}##what a great pace to keep victory and loss events!
+grue = NPC("A Grue", gruePronouns, grueInv, 5, 5, 5, 50, 50, 50, "a small reptilian looking beast with far too many teeth.", False, "none", grueEvents, grueConvo, True, grueAttacks)
 ## END NPC CREATION ##
 
 def stringContains(word, phrase):##this guy finds a word in a phrase, and can be asked in a manner consistent with the rest of python.
@@ -1254,15 +1292,22 @@ def ChangeLocation(oldLocation, newLocation, Character):##This moves the player 
 	checkForEvent(newLocation, Character, newLocation, "enterZone")
 
 def Scene(Location, Character):##====This is the current scene. All commands and events should come back to this.
-	cmd = input(">>>")
-	
-	for i in Commands:
-		if(stringContains(i, cmd) == True):
-			stringToClassDef(playerCommand, i)(Location, Character, cmd)## This is where all player input is passed to the relevant command
-			
+	for c in Location.npcs:
+		if stringToClass(c).bAggressive == True:
+			print("Battle because %s wants to fight." % (stringToClass(c).name))
+			print("----------")
+			Battle(Character, stringToClass(c), Location)
+			break
 	else:
-		print("Command not recognised.")
-		Scene(Location, Character)
+		cmd = input(">>>")
+		
+		for i in Commands:
+			if(stringContains(i, cmd) == True):
+				stringToClassDef(playerCommand, i)(Location, Character, cmd)## This is where all player input is passed to the relevant command
+				
+		else:
+			print("Command not recognised.")
+			Scene(Location, Character)
 			
 def boot():##=========================Just the boot screen
 	print("ITER: The Journey.")
@@ -1279,4 +1324,154 @@ def stringToClass(str):##This is meant to turn strings into class names.
 def stringToClassDef(className, defName):##This takes strings and makes them a def name within a class. className.defName is the result. can be handed arguments
 	return getattr(className, defName)
 	
+def enemyAttack(player, enemy, location):
+	atk = random.randint(0, 2)
+	
+	if atk == 0:
+		if(player.Body + random.randint(1, 20) < enemy.Body + random.randint(1, 20)):
+			Edmg = int(random.randint(0, enemy.HP) / 2)
+			print(enemy.Attacks["HP"][random.randint(0, len(enemy.Attacks["HP"])-1)])
+			print("You receive " + str(Edmg) + " HP damage.")
+			player.HP -= Edmg
+			print("----------")
+			if player.HP <= 0:
+				enemy.bAggressive = False
+				BattleComplete(enemy.Event["playerHP_Lose"], player, enemy, location)
+			else:
+				Battle(player, enemy, location)
+
+		else:
+			print(enemy.Attacks["HP"][random.randint(0, len(enemy.Attacks["HP"])-1)])
+			print("You manage to avoid taking damage.")
+			print("----------")
+			Battle(player, enemy, location)
+			
+	if atk == 1:
+		if(player.Spirit + random.randint(1, 20) < enemy.Spirit + random.randint(1, 20)):
+			Edmg = int(random.randint(0, enemy.SP) / 2)
+			print(enemy.Attacks["SP"][random.randint(0, len(enemy.Attacks["SP"])-1)])
+			print("You receive " + str(Edmg) + " SP damage.")
+			player.SP -= Edmg
+			print("----------")
+			if player.SP <= 0:
+				enemy.bAggressive = False
+				BattleComplete(enemy.Event["playerSP_Lose"], player, enemy, location)
+			else:
+				Battle(player, enemy, location)
+		else:
+			print(enemy.Attacks["SP"][random.randint(0, len(enemy.Attacks["SP"])-1)])
+			print("You manage to avoid taking damage.")
+			print("----------")
+			Battle(player, enemy, location)
+			
+	if atk == 2:
+		if(player.Mind + random.randint(1, 20) < enemy.Mind + random.randint(1, 20)):
+			Edmg = int(random.randint(0, enemy.MP) / 2)
+			print(enemy.Attacks["MP"][random.randint(0, len(enemy.Attacks["MP"])-1)])
+			print("You receive " + str(Edmg) + " MP damage.")
+			player.MP -= Edmg
+			print("----------")
+			if player.MP <= 0:
+				enemy.bAggressive = False
+				BattleComplete(enemy.Event["playerMP_Lose"], player, enemy, location)
+			else:
+				Battle(player, enemy, location)
+		else:
+			print(enemy.Attacks["MP"][random.randint(0, len(enemy.Attacks["MP"])-1)])
+			print("You manage to avoid taking damage.")
+			print("----------")
+			Battle(player, enemy, location)		
+
+def BattleComplete(value, PC, NPC, location):
+	if value == 0:
+		print("Player wins via HP")
+	if value == 1:
+		print("Player loses via HP")
+	if value == 2:
+		print("Player wins via SP")
+	if value == 3:
+		print("Player loses via SP")
+	if value == 4:
+		print("Player wins via MP")
+	if value == 5:
+		print("Player loses via MP")
+	Scene(location, PC)
+			
+def Battle(player, enemy, location):
+
+	print("You are battling a " + enemy.name + ", " + enemy.description)
+	
+	if enemy.HP >= 50:
+		print("It looks in perfect health.")
+	if enemy.HP <= 25:
+		print("It looks a little shaky on its feet.")
+	if enemy.HP <= 10:
+		print("It looks near death.")
+
+	print("----------")
+	print("HP: %s" % (str(player.HP)))
+	print("SP: %s" % (str(player.SP)))
+	print("MP: %s" % (str(player.MP)))
+	print("----------")
+	cmd = input(">>Attack>>")
+	print("----------")
+	
+	if cmd == "":
+		if(player.Body + random.randint(1, 20) > enemy.Body + random.randint(1, 20)):
+			dmg = int(random.randint(0, player.HP) / 2)
+			print(player.Attacks["HP"][random.randint(0, len(player.Attacks["HP"]) -1)] + " causing " + str(dmg) + " HP damage.")
+			enemy.HP -= dmg
+			print("----------")
+			
+			if enemy.HP <= 0:
+				enemy.bAggressive = False
+				BattleComplete(enemy.Event["playerHP_Victory"], player, enemy, location)
+			
+			else:		
+				enemyAttack(player, enemy, location)
+		else:
+			print(player.Attacks["HP"][random.randint(0, len(player.Attacks["HP"]) -1)] + " but your attack misses.")
+			print("----------")
+			enemyAttack(player, enemy, location)
+				
+	if cmd == "spirit":
+		if(player.Spirit + random.randint(1, 20) > enemy.Spirit + random.randint(1, 20)):
+			dmg = int(random.randint(0, player.SP) / 2)
+			print(player.Attacks["SP"][random.randint(0, len(player.Attacks["SP"]) -1)] + " causing " + str(dmg) + " SP damage.")
+			enemy.SP -= dmg
+			print("----------")
+			
+			if enemy.SP <= 0:
+				enemy.bAggressive = False
+				BattleComplete(enemy.Event["playerSP_Victory"], player, enemy, location)
+			
+			else:		
+				enemyAttack(player, enemy, location)
+		else:
+			print(player.Attacks["SP"][random.randint(0, len(player.Attacks["SP"]) -1)] + " but your attack fails.")
+			print("----------")
+			enemyAttack(player, enemy, location)
+				
+	if cmd == "mind":
+		if(player.Mind + random.randint(1, 20) > enemy.Mind + random.randint(1, 20)):
+			dmg = int(random.randint(0, player.MP) / 2)
+			print(player.Attacks["MP"][random.randint(0, len(player.Attacks["MP"]) -1)] + " causing " + str(dmg) + " MP damage.")
+			enemy.MP -= dmg
+			print("----------")
+			
+			if enemy.MP <= 0:
+				enemy.bAggressive = False
+				BattleComplete(enemy.Event["playerMP_Victory"], player, enemy, location)
+			
+			else:		
+				enemyAttack(player, enemy, location)
+		else:
+			print(player.Attacks["MP"][random.randint(0, len(player.Attacks["MP"]) -1)] + " but your attack fails.")
+			print("----------")
+			enemyAttack(player, enemy, location)
+
+	else:
+		print("Command not recognized")
+		Battle(player, enemy, location)
+		
 boot()##====================the only base level command if at all possible.
