@@ -83,9 +83,7 @@ Now with all new NPCs! These guys have names, stats, descriptions, inventories, 
 
 # Known Bugs
 
-Either south door in test room or navigation and key items broken. pending investigation.
-
-Investgation yeilded no fruit. Animus ex Machina strikes again.
+None, this may itself be a bug though.
 
 # To do, in something resembling an order of priority:
 
