@@ -6,8 +6,9 @@ import re
 import random
 
 class Person(object):##this is a generic person, with a name, inventory and basic add/remove item functions
-	def __init__(self, name, inventory, Mind, Body, Spirit, HP, SP, MP, Attacks):
+	def __init__(self, name, description, inventory, Mind, Body, Spirit, HP, SP, MP, Attacks):
 		self.name = name
+		self.description = description
 		self.inventory = inventory
 		self.Mind = Mind
 		self.Body = Body
@@ -181,7 +182,7 @@ class Zone(object):##this is all rooms and areas the player will be in. It has a
 	
 	def removeNPC(self, NPC):
 		for c in self.npcs:
-			if(c == NPC):
+			if(stringToClass(c) == NPC):
 				self.npcs.remove(c)
 				break
 	
@@ -452,7 +453,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					break
 						
 			for s in Location.structures:
-				if(stringContains(s, Commands) == True):
+				if(stringContains(s, Command) == True):
 					stringToClass(s).examineStructure(Location, Character)
 					break
 			
@@ -493,8 +494,21 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					break
 				
 			else:
-				print("You don't see a %s here." % (cmd.lower()))
-				Scene(Location, Character)
+				if(cmd.lower() == "self"):
+					print("You are " + Character.name + ", a " + Character.description)
+					print("----------")
+					print("HP: %s" % (str(Character.HP)))
+					print("SP: %s" % (str(Character.SP)))
+					print("MP: %s" % (str(Character.MP)))
+					print("----------")
+					print("Body: %s" % (str(Character.Body)))
+					print("Spirit: %s" % (str(Character.Spirit)))
+					print("Mind: %s" % (str(Character.Mind)))
+					print("----------")
+					Scene(Location, Character)
+				else:
+					print("You don't see a %s here." % (cmd.lower()))
+					Scene(Location, Character)
 						
 	def inventory(self, Location, Character, Command):##Checks the players Inventory, printing its contents
 		Player.checkInventory()
@@ -510,7 +524,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		else:
 			Scene(Location, Character)
 		
-	def help(self, Location, Character, Command):##siply prints all the commands, no descriptions for you
+	def help(self, Location, Character, Command):##simply prints all the commands, no descriptions for you GLHF
 		print("Available Commands:")
 		for c in Commands:
 			print(c)
@@ -933,12 +947,48 @@ class PlayerCommands(object):##These are all the commands the player can perform
 				print("You don't see anyone called %s here." % (cmd))
 				Scene(Location, Character)
 	
+	def attack(self, Location, Character, Command):##Use this to attack people, you monster
+	
+		if(len(Command) > 6):
+			for c in Location.npcs:
+				if(stringContains(c, Command) == True):
+					print("You make a move towards %s, and they turn to face you, seeing your intent. You've a fight on your hands." % stringToClass(c).name)
+					stringToClass(c).bAggressive = True
+					Scene(Location, Character)
+					break
+		else:
+			cmd = input("Who do you want to attack? >>>")
+			
+			for c in Location.npcs:
+				if(stringContains(c, cmd) == True):
+					print("You make a move towards %s, and they turn to face you, seeing your intent. You've a fight on your hands." % (stringToClass(c).name))
+					stringToClass(c).bAggressive = True
+					Scene(Location, Character)
+					break
+					
+			else:
+				print("You don't see %s here." % (cmd))
+				Scene(Location, Character)
+			
+	def self(self, Location, Character, Command):
+		print("You are " + Character.name + ", a " + Character.description)
+		print("----------")
+		print("HP: %s" % (str(Character.HP)))
+		print("SP: %s" % (str(Character.SP)))
+		print("MP: %s" % (str(Character.MP)))
+		print("----------")
+		print("Body: %s" % (str(Character.Body)))
+		print("Spirit: %s" % (str(Character.Spirit)))
+		print("Mind: %s" % (str(Character.Mind)))
+		print("----------")
+		Scene(Location, Character)
+	
 ###########################
 ##ASSIGN ALL CLASSES HERE##
 ###########################
 
 ## START PLAYER COMMANDS##
-Commands = ["search", "examine", "inventory", "quit", "help", "open", "close", "take", "drop", "move", "use", "talk"]
+Commands = ["search", "examine", "inventory", "quit", "help", "open", "close", "take", "drop", "move", "use", "talk", "attack", "self"]
 playerCommand = PlayerCommands()
 ## END PLAYER COMMANDS##
 
@@ -953,7 +1003,7 @@ playerAttacks = {
 	"SP" : ["You yell in an attempt intimidate the enemy,", "You sling a slew of insults at your opponent,"],
 	"MP" : ["Summoning your inner reserves, you focus energy at your enemy,", "You thrust forward your arm, letting out a stream of energy,"]
 	}
-Player = PC("Dickbutt", pInv, 10, 10, 10, 100, 100, 100, playerAttacks)
+Player = PC("Dickbutt", "short, ugly and kind of intangible being who is the closest thing to a human without actually being one. Weird.", pInv, 10, 10, 10, 100, 100, 100, playerAttacks)
 ## END PLAYER CREATION ##
 
 ## BEGIN EVENT ASSIGNMENTS ##
@@ -1182,6 +1232,12 @@ bobEvent = {
 	"fuck" : "bobFuckEvent",
 	"me" : "bobMeEvent",
 	"how" : "bobHowEvent",
+    "playerHP_Victory" : 0,
+	"playerHP_Lose" : 1,
+	"playerSP_Victory" : 2,
+	"playerSP_Lose" : 3,
+	"playerMP_Victory" : 4,
+	"playerMP_Lose" : 5,	
 	}
 bob = NPC("Bob", bobPronouns, bobInv, 10, 10, 10, 100, 100, 100, "a short, uninteresting fellow with strange, oddly arranged facial features that you'd think make him easy to remember, but somehow have the opposite effect.", True, "none", bobEvent, bobConvo, False, playerAttacks)
 
@@ -1193,7 +1249,13 @@ gruePronouns = {
 	"his" : "its",
 	"him" : "it",
 	}
-grueConvo = {}
+grueConvo = {
+    "intro" : {
+        "introtext" : "Leave me be, human.",
+        "none" : "I said go away!",
+        "goodbye" : "Hisss!",
+        },
+    }
 grueEvents = {
 	"playerHP_Victory" : 0,
 	"playerHP_Lose" : 1,
@@ -1206,8 +1268,8 @@ grueAttacks = {
 	"HP" : ["The Grue lashes out with it's claws.", "The Grue viciously headbutts you.",],
 	"SP" : ["With a quick action the Grue slings sand and dirt into your face.", "The Grue flashe it's version of genitals at you. You won't be able to get THST image out of your head for a while.",],
 	"MP" : ["The Grue briefly closes its eyes in an expression of focus and you feel a bolt of pain throughout your body.", "The Grue slings a small bottle at you, which shatters mid-air, coating you in a mist of liquid, leaving you groggy."]
-	}##what a great pace to keep victory and loss events!
-grue = NPC("A Grue", gruePronouns, grueInv, 5, 5, 5, 50, 50, 50, "a small reptilian looking beast with far too many teeth.", False, "none", grueEvents, grueConvo, True, grueAttacks)
+	}
+grue = NPC("Grue", gruePronouns, grueInv, 5, 5, 5, 50, 50, 50, "a small reptilian looking beast with far too many teeth.", False, "none", grueEvents, grueConvo, True, grueAttacks)
 ## END NPC CREATION ##
 
 def stringContains(word, phrase):##this guy finds a word in a phrase, and can be asked in a manner consistent with the rest of python.
@@ -1299,6 +1361,7 @@ def Scene(Location, Character):##====This is the current scene. All commands and
 			Battle(Character, stringToClass(c), Location)
 			break
 	else:
+		print("----------")##clock could go here.
 		cmd = input(">>>")
 		
 		for i in Commands:
@@ -1395,6 +1458,7 @@ def BattleComplete(value, PC, NPC, location):
 		print("Player wins via MP")
 	if value == 5:
 		print("Player loses via MP")
+	location.removeNPC(NPC)
 	Scene(location, PC)
 			
 def Battle(player, enemy, location):
