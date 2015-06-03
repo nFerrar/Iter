@@ -182,7 +182,7 @@ class Zone(object):##this is all rooms and areas the player will be in. It has a
 	
 	def removeNPC(self, NPC):
 		for c in self.npcs:
-			if(stringToClass(c) == NPC):
+			if(c == NPC):
 				self.npcs.remove(c)
 				break
 	
@@ -1118,6 +1118,48 @@ rollEventActions = {
 	}
 rollEventOrder = ["PRINT", "RANDOMEVENT",]
 rollEvent = Event("none", "none", rollEventActions, rollEventOrder, 1, False, "none")
+
+grueHPlossAction = {
+	"PRINT" : "player lost via HP",
+	"REMOVENPC" : "grue",
+	}
+grueHPlossOrder = ["PRINT", "REMOVENPC"]
+grueHPloss = Event("none", "none", grueHPlossAction, grueHPlossOrder, 0, False, "none")
+
+grueHPvictoryAction = {
+	"PRINT" : "player won via HP",
+	"REMOVENPC" : "grue",
+	}
+grueHPvictoryOrder = ["PRINT", "REMOVENPC"]
+grueHPvictory = Event("none", "none", grueHPvictoryAction, grueHPvictoryOrder, 0, False, "none")
+
+grueSPlossAction = {
+	"PRINT" : "player lost via SP",
+	"REMOVENPC" : "grue",
+	}
+grueSPlossOrder = ["PRINT", "REMOVENPC"]
+grueSPloss = Event("none", "none", grueSPlossAction, grueSPlossOrder, 0, False, "none")
+
+grueSPvictoryAction = {
+	"PRINT" : "player won via SP",
+	"REMOVENPC" : "grue",
+	}
+grueSPvictoryOrder = ["PRINT", "REMOVENPC"]
+grueSPvictory = Event("none", "none", grueSPvictoryAction, grueSPvictoryOrder, 0, False, "none")
+
+grueMPlossAction = {
+	"PRINT" : "player lost via MP",
+	"REMOVENPC" : "grue",
+	}
+grueMPlossOrder = ["PRINT", "REMOVENPC"]
+grueMPloss = Event("none", "none", grueMPlossAction, grueMPlossOrder, 0, False, "none")
+
+grueMPvictoryAction = {
+	"PRINT" : "player won via MP",
+	"REMOVENPC" : "grue",
+	}
+grueMPvictoryOrder = ["PRINT", "REMOVENPC"]
+grueMPvictory = Event("none", "none", grueMPvictoryAction, grueSPvictoryOrder, 0, False, "none")
 ## END EVENT ASSIGNMENTS ##
 
 ## BEGIN ITEM ASSIGNMENTS ##
@@ -1233,12 +1275,12 @@ bobEvent = {
 	"fuck" : "bobFuckEvent",
 	"me" : "bobMeEvent",
 	"how" : "bobHowEvent",
-    "playerHP_Victory" : 0,
-	"playerHP_Lose" : 1,
-	"playerSP_Victory" : 2,
-	"playerSP_Lose" : 3,
-	"playerMP_Victory" : 4,
-	"playerMP_Lose" : 5,	
+	"playerHP_Victory" : "grueHPvictory",
+	"playerHP_Lose" : "grueHPloss",
+	"playerSP_Victory" : "grueSPvictory",
+	"playerSP_Lose" : "grueSPloss",
+	"playerMP_Victory" : "grueMPvictory",
+	"playerMP_Lose" : "grueMPloss",
 	}
 bob = NPC("Bob", bobPronouns, bobInv, 10, 10, 10, 100, 100, 100, "a short, uninteresting fellow with strange, oddly arranged facial features that you'd think make him easy to remember, but somehow have the opposite effect.", True, "none", bobEvent, bobConvo, False, playerAttacks)
 
@@ -1258,12 +1300,12 @@ grueConvo = {
         },
     }
 grueEvents = {
-	"playerHP_Victory" : 0,
-	"playerHP_Lose" : 1,
-	"playerSP_Victory" : 2,
-	"playerSP_Lose" : 3,
-	"playerMP_Victory" : 4,
-	"playerMP_Lose" : 5,	
+	"playerHP_Victory" : "grueHPvictory",
+	"playerHP_Lose" : "grueHPloss",
+	"playerSP_Victory" : "grueSPvictory",
+	"playerSP_Lose" : "grueSPloss",
+	"playerMP_Victory" : "grueMPvictory",
+	"playerMP_Lose" : "grueMPloss",	
 	}
 grueAttacks = {
 	"HP" : ["The Grue lashes out with it's claws.", "The Grue viciously headbutts you.",],
@@ -1376,10 +1418,12 @@ def Scene(Location, Character):##====This is the current scene. All commands and
 def boot():##=========================Just the boot screen
 	print("ITER: The Journey.")
 	print("Coming Soon.")
+	print("----------")
 	print("Type your name to enter the test room.")
 	cmd = input(">>>")
 	Player.name = cmd
 	print("Welcome %s." % (Player.name))
+	print("----------")
 	ChangeLocation(TestRoom, TestRoom, Player)
 
 def stringToClass(str):##This is meant to turn strings into class names.
@@ -1400,7 +1444,7 @@ def enemyAttack(player, enemy, location):
 			print("----------")
 			if player.HP <= 0:
 				enemy.bAggressive = False
-				BattleComplete(enemy.Event["playerHP_Lose"], player, enemy, location)
+				BattleComplete("playerHP_Lose", player, enemy, location)
 			else:
 				Battle(player, enemy, location)
 
@@ -1419,7 +1463,7 @@ def enemyAttack(player, enemy, location):
 			print("----------")
 			if player.SP <= 0:
 				enemy.bAggressive = False
-				BattleComplete(enemy.Event["playerSP_Lose"], player, enemy, location)
+				BattleComplete("playerSP_Lose", player, enemy, location)
 			else:
 				Battle(player, enemy, location)
 		else:
@@ -1437,7 +1481,7 @@ def enemyAttack(player, enemy, location):
 			print("----------")
 			if player.MP <= 0:
 				enemy.bAggressive = False
-				BattleComplete(enemy.Event["playerMP_Lose"], player, enemy, location)
+				BattleComplete("playerMP_Lose", player, enemy, location)
 			else:
 				Battle(player, enemy, location)
 		else:
@@ -1446,34 +1490,18 @@ def enemyAttack(player, enemy, location):
 			print("----------")
 			Battle(player, enemy, location)		
 
-def BattleComplete(value, PC, NPC, location):
-	if value == 0:
-		print("Player wins via HP")
-		location.removeNPC(NPC)
-	if value == 1:
-		print("Player loses via HP")
-	if value == 2:
-		print("Player wins via SP")
-		location.removeNPC(NPC)
-	if value == 3:
-		print("Player loses via SP")
-	if value == 4:
-		print("Player wins via MP")
-		location.removeNPC(NPC)
-	if value == 5:
-		print("Player loses via MP")	
-		
-	Scene(location, PC)
+def BattleComplete(cause, PC, NPC, location):##called when the battle is complete.
+	stringToClass(NPC.Event[cause]).triggerEvent(location, PC)
 			
 def Battle(player, enemy, location):
 
 	print("You are battling a " + enemy.name + ", " + enemy.description)
 	
-	if enemy.HP >= 50:
+	if enemy.HP >= (enemy.Body * 10 / 2):
 		print("It looks in perfect health.")
-	if enemy.HP <= 25:
+	if enemy.HP <= (enemy.Body * 10 / 4):
 		print("It looks a little shaky on its feet.")
-	if enemy.HP <= 10:
+	if enemy.HP <= (enemy.Body):
 		print("It looks near death.")
 
 	print("----------")
@@ -1493,7 +1521,7 @@ def Battle(player, enemy, location):
 			
 			if enemy.HP <= 0:
 				enemy.bAggressive = False
-				BattleComplete(enemy.Event["playerHP_Victory"], player, enemy, location)
+				BattleComplete("playerHP_Victory", player, enemy, location)
 			
 			else:		
 				enemyAttack(player, enemy, location)
@@ -1511,7 +1539,7 @@ def Battle(player, enemy, location):
 			
 			if enemy.SP <= 0:
 				enemy.bAggressive = False
-				BattleComplete(enemy.Event["playerSP_Victory"], player, enemy, location)
+				BattleComplete("playerSP_Victory", player, enemy, location)
 			
 			else:		
 				enemyAttack(player, enemy, location)
@@ -1529,7 +1557,7 @@ def Battle(player, enemy, location):
 			
 			if enemy.MP <= 0:
 				enemy.bAggressive = False
-				BattleComplete(enemy.Event["playerMP_Victory"], player, enemy, location)
+				BattleComplete("playerMP_Victory", player, enemy, location)
 			
 			else:		
 				enemyAttack(player, enemy, location)
