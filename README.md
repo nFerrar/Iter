@@ -36,6 +36,12 @@ quit
 talk
 - lets you talk to NPCs!
 
+attack
+- initiates combat with designated NPC, you can fight anyone.
+
+self
+- works as examine for the PC, give you current stats and description.
+
 help 
 - lists the available commands, without description. GLHF
 
@@ -57,7 +63,7 @@ A limitation of the events system is that currently each action can only be perf
 
 ALL NEW COMBAT SYSTEM
 
-Currently bare bones, you can now be attacked by agressive NPCs. Along with basic attacks, you can also attack an enemys Mind or Spirit. You can also define mutiple attack desciprtions for both the enemies and the player.
+Currently bare bones, you can now be attacked by agressive NPCs, or initiate cmbat wth non-aggressive NPCs. Along with basic attacks, you can also attack an enemys Mind or Spirit. You can also define mutiple attack desciprtions for both the enemies and the player.
 
 Three types of things!
 
@@ -78,6 +84,8 @@ Now with all new NPCs! These guys have names, stats, descriptions, inventories, 
 # Known Bugs
 
 Either south door in test room or navigation and key items broken. pending investigation.
+
+Investgation yeilded no fruit. Animus ex Machina strikes again.
 
 # To do, in something resembling an order of priority:
 
