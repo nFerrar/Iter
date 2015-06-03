@@ -706,13 +706,14 @@ class PlayerCommands(object):##These are all the commands the player can perform
 									Character.removeFromInventory(stringToClass(Location.exits[d]).keyItem, 1)
 									ChangeLocation(Location, stringToClass(Location.exits[d]), Character)
 									break
-							else:
-								print(stringToClass(Location.exits[d]).blockedText)
-								Scene(Location, Character)
-								break
-				else:
-					print("You cannot go that way.")
-					Scene(Location, Character)
+						else:
+							print(stringToClass(Location.exits[d]).blockedText)
+							Scene(Location, Character)
+							break
+						
+			else:
+				print("You cannot go that way.")
+				Scene(Location, Character)
 		
 		else:
 			cmd = input("Which direction do you want to go? >>>")
@@ -1448,17 +1449,20 @@ def enemyAttack(player, enemy, location):
 def BattleComplete(value, PC, NPC, location):
 	if value == 0:
 		print("Player wins via HP")
+		location.removeNPC(NPC)
 	if value == 1:
 		print("Player loses via HP")
 	if value == 2:
 		print("Player wins via SP")
+		location.removeNPC(NPC)
 	if value == 3:
 		print("Player loses via SP")
 	if value == 4:
 		print("Player wins via MP")
+		location.removeNPC(NPC)
 	if value == 5:
-		print("Player loses via MP")
-	location.removeNPC(NPC)
+		print("Player loses via MP")	
+		
 	Scene(location, PC)
 			
 def Battle(player, enemy, location):
