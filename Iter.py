@@ -43,12 +43,17 @@ class Person(object):##this is a generic person, with a name, inventory and basi
 class PC(Person):##this is the player character class, it adds a checkInventory function to the Person class
 	def checkInventory(self):
 		print("You take a moment to check what you're carrying.")
-		print("You have on you:")
-		for i in self.inventory:
-			if(self.inventory[i] > 1):
-				print(str(self.inventory[i]) + " " + str(i) + "s")
-			else:
-				print(str(i))
+		
+		if(self.inventory != {}):
+			print("You have on you:")
+			for i in self.inventory:
+				if(self.inventory[i] > 1):
+					print(str(self.inventory[i]) + " " + str(i) + "s")
+				else:
+					print(str(i))
+		
+		else:
+			print("You don't seem to be carrying anything.")
 
 class NPC(Person):##NPCs. Anything other than the player.
 	def __init__(self, name, pronouns, inventory, Mind, Body, Spirit, HP, SP, MP, description, bEvent, Trigger, Event, Convo, bAggressive, Attacks):
@@ -360,16 +365,16 @@ class Event(object):##these are events, where the majority of the Engines power 
 		print(text)
 	
 	def ADDTOINVENTORY(self, item):##Call to add an item to the player character
-		self.Character.addToInventory(item, 1)
+		self.Character.addToInventory(item[0], item[1])
 		
 	def REMOVEFROMINVENTORY(self, item):##Call to remove an item from the player character
-		self.Character.removeFromInventory(item, 1)
+		self.Character.removeFromInventory(item[0], item[1])
 		
 	def ADDITEM(self, item):##Call to add an item to the surround area
-		self.Location.addItem(item, 1)
+		self.Location.addItem(item[0], item[1])
 		
 	def REMOVEITEM(self, item):##Call to remove an item from the surrounding area
-		self.Location.removeItem(item, 1)
+		self.Location.removeItem(item[0], item[1])
 		
 	def TELEPORT(self, newLocation):##Call to teleport the player to a different room without telling them. Good for making a room 'change'
 		self.Location = stringToClass(newLocation)
@@ -397,18 +402,11 @@ class Event(object):##these are events, where the majority of the Engines power 
 	def REMOVENPC(self, NPC):##Removes an NPC from the zone
 		self.Location.removeNPC(NPC)
 	
-	def SETACTIVENPC(self, NPC):##Sets the active NPC, so the NPC can be interacted with specifically.
-		activeNPC = NPC
-	
 	def ADDTONPCINVENTORY(self, item):##Adds item to the active NPCs inventory
-		if(activeNPC != "none"):
-			stringToClass(activeNPC).addToInventory(item, 1)
-		else:
-			print("No active NPC set in event.")
+		stringToClass(item[0]).addToInventory(item[1], item[2])
 	
 	def REMOVEFROMACTIVENPCINVENTORY(self, item):##Removes item from active NPC inventory.
-		if(activeNPC != "none"):
-			stringToClass(activeNPC).removeFromInventory(item, 1)
+		stringToClass(item[0]).removeFromInventory(item[1], item[2])
 
 	def RANDOMEVENT(self, eventList):##Rolls through a list of events and picks one at random.
 		stringToClassDef(stringToClass(eventList[random.randint(0, len(eventList)-1)]), "triggerEvent")(self.Location, self.Character)
@@ -984,21 +982,17 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		print("----------")
 		Scene(Location, Character)
 	
+## START PLAYER COMMANDS## NO TOUCHING ##
+Commands = ["search", "examine", "inventory", "quit", "help", "open", "close", "take", "drop", "move", "use", "talk", "attack", "self"]
+playerCommand = PlayerCommands()
+## END PLAYER COMMANDS## NO TOUCHING ##
+
 ###########################
 ##ASSIGN ALL CLASSES HERE##
 ###########################
 
-## START PLAYER COMMANDS##
-Commands = ["search", "examine", "inventory", "quit", "help", "open", "close", "take", "drop", "move", "use", "talk", "attack", "self"]
-playerCommand = PlayerCommands()
-## END PLAYER COMMANDS##
-
 ## BEGIN PLAYER CREATION ##
-pInv = {
-	"clothing" : 1,
-	"wallet" : 1,
-	"shin" : 30,
-	}
+pInv = {}
 playerAttacks = {
 	"HP": ["You strike out at the enemy,", "With a yell you batter your opponent with a series of blows,"],
 	"SP" : ["You yell in an attempt intimidate the enemy,", "You sling a slew of insults at your opponent,"],
@@ -1008,311 +1002,37 @@ Player = PC("Dickbutt", "short, ugly and kind of intangible being who is the clo
 ## END PLAYER CREATION ##
 
 ## BEGIN EVENT ASSIGNMENTS ##
-testEventActions = {
-	"PRINT" : "It seems you won't be able to go any further for now, have some clothes and a wallet.",
-	"ADDTOINVENTORY" : "clothing",
-	"ADDITEM" : "wallet",
-	}
-testEventOrder = ["PRINT", "ADDTOINVENTORY", "ADDITEM"]
-testEvent = Event("none", "none", testEventActions, testEventOrder, -1, False, "none")
 
-boxEventActions = {
-	"PRINT" : "You somehow manage to pinch your fingers as you close it, man it would be stupid if you did that every time you closed this box...",
-	"EVENT" : "secondEvent",
-	}
-boxEventOrder = ["PRINT", "EVENT"]
-boxEvent = Event("none", "none", boxEventActions, boxEventOrder,  2, False, "none")
-
-secondEventAction = {
-	"PRINT" : "Turns out you can trigger events from events. This is good news.",
-	"WAIT" : "And you are restricted to a single instance of each operation per event. So long, complicated events will have to be split up between multiple events. This is a pain."
-	}
-secondEventOrder = ["PRINT", "WAIT"]
-secondEvent = Event("none", "none", secondEventAction, secondEventOrder, 1, False, "none")
-
-bulbEventActions = {
-	"ADDTOINVENTORY" : "lightbulb",
-	"TELEPORT" : "DarkTestRoom",
-	"PRINT" : "Once you remove the lightbulb the room and you are both plunged into inky blackness, now you can't see!",
-	"WAIT" : "However, in the dark, you notice a strange, thin line of light coming off the wall. If you could see you might be able to go and investigate.",
-	}
-bulbEventOrder = ["ADDTOINVENTORY", "TELEPORT", "PRINT", "WAIT"]
-bulbEvent = Event("none", "none", bulbEventActions, bulbEventOrder, -1, False, "none")
-
-socketEventActions = {
-	"REMOVEFROMINVENTORY" : "lightbulb",
-	"TELEPORT" : "TestRoom",
-	"PRINT" : "You can see again! That's better. Now, about that suspicious wall.",
-	"ADDSTRUCTURE" : "wall",
-	} 
-socketEventOrder = ["REMOVEFROMINVENTORY", "TELEPORT", "PRINT", "ADDSTRUCTURE"]
-socketEvent = Event("none", "none", socketEventActions, socketEventOrder, -1, False, "none")
-
-dropClothesEventActions = {
-	"PRINT" : "You feel a little cold without your clothes on, and you doubt you'll be able to engage in decent society if you don't remedy the situation.",
-	}
-dropEventOrder = ["PRINT",]
-dropClothesEvent = Event("none", "none", dropClothesEventActions, dropEventOrder, -1, False, "none")
-
-pickupKeyEventActions = {
-	"PRINT" : "As you hold the key in your hand, you get a sense of great...contextual importance."
-	}
-pickupKeyEventOrder = ["PRINT",]
-pickupKeyEvent = Event("none", "none", pickupKeyEventActions, pickupKeyEventOrder, -1, False, "none")
-
-hiddenDoorEventActions = {
-	"PRINT" : "As you apply some pressure to the wall, there is a creak, thunk, and rattle as the section of wall shifts back and rises up into the ceiling in a shower of dust, revealing a small exit to the east.",
-	"ADDEXIT" : {"east" : "TestSecretRoom"},
-	"REMOVESTRUCTURE" : "wall",
-	}
-hiddenDoorEventOrder = ["PRINT", "ADDEXIT", "REMOVESTRUCTURE"]
-hiddenDoorEvent = Event("none", "none", hiddenDoorEventActions, hiddenDoorEventOrder, 1, False, "none")
-
-bobFuckEventActions = {
-	"PRINT" : "<<Bob<<'Why you gotta be so rude?'",
-	}
-bobFuckEventOrder = ["PRINT"]
-bobFuckEvent = Event("none", "none", bobFuckEventActions, bobFuckEventOrder, -1, True, "bob")
-
-bobMeEventActons = {
-	"PRINT" : "<<Bob<<'You know, these kind of things wouldn't happen in a modern RPG.'",
-	}
-bobMeEventOrder = ["PRINT"]
-bobMeEvent = Event("none", "none", bobMeEventActons, bobMeEventOrder, -1, True, "bob")
-
-bobHowEventActions = {
-	"PRINT" : "Bob seems to sigh deeply and stares at you with his dead little eyes. It's incredibly awkward.",
-	"WAIT" : "He just keeps staring.....",
-	}
-bobHowEventOrder = ["PRINT", "WAIT"]
-bobHowEvent = Event("none", "none", bobHowEventActions, bobFuckEventOrder, -1, True, "bob")
-
-bobLightsEventActions = {
-	"PRINT" : "<<Bob<<'Turn the fucking light back on you fuckwit.'",
-	"WAIT" : "His voice carries the implication of violence.",
-	}
-bobLighsEventOrder = ["PRINT", "WAIT"]
-bobLightsEvent = Event("none", "none", bobLightsEventActions, bobLighsEventOrder, -1, False, "none")
-
-randEvent1Actions = {
-	"PRINT" : "Random Event 1",
-	}
-randEvent1Order = ["PRINT"]
-randEvent1 = Event("none", "none", randEvent1Actions, randEvent1Order, -1, False, "none")
-
-randEvent2Actions = {
-	"PRINT" : "Random Event 2",
-	}
-randEvent2Order = ["PRINT"]
-randEvent2 = Event("none", "none", randEvent2Actions, randEvent2Order, -1, False, "none")
-
-randEvent3Actions = {
-	"PRINT" : "Random Event 3",
-	}
-randEvent3Order = ["PRINT"]
-randEvent3 = Event("none", "none", randEvent3Actions, randEvent3Order, -1, False, "none")
-
-rollEventActions = {
-	"PRINT" : "Rolling random Event...",
-	"RANDOMEVENT" : ["randEvent1", "randEvent2", "randEvent3",],
-	}
-rollEventOrder = ["PRINT", "RANDOMEVENT",]
-rollEvent = Event("none", "none", rollEventActions, rollEventOrder, 1, False, "none")
-
-grueHPlossAction = {
-	"PRINT" : "player lost via HP",
-	"REMOVENPC" : "grue",
-	}
-grueHPlossOrder = ["PRINT", "REMOVENPC"]
-grueHPloss = Event("none", "none", grueHPlossAction, grueHPlossOrder, 0, False, "none")
-
-grueHPvictoryAction = {
-	"PRINT" : "player won via HP",
-	"REMOVENPC" : "grue",
-	}
-grueHPvictoryOrder = ["PRINT", "REMOVENPC"]
-grueHPvictory = Event("none", "none", grueHPvictoryAction, grueHPvictoryOrder, 0, False, "none")
-
-grueSPlossAction = {
-	"PRINT" : "player lost via SP",
-	"REMOVENPC" : "grue",
-	}
-grueSPlossOrder = ["PRINT", "REMOVENPC"]
-grueSPloss = Event("none", "none", grueSPlossAction, grueSPlossOrder, 0, False, "none")
-
-grueSPvictoryAction = {
-	"PRINT" : "player won via SP",
-	"REMOVENPC" : "grue",
-	}
-grueSPvictoryOrder = ["PRINT", "REMOVENPC"]
-grueSPvictory = Event("none", "none", grueSPvictoryAction, grueSPvictoryOrder, 0, False, "none")
-
-grueMPlossAction = {
-	"PRINT" : "player lost via MP",
-	"REMOVENPC" : "grue",
-	}
-grueMPlossOrder = ["PRINT", "REMOVENPC"]
-grueMPloss = Event("none", "none", grueMPlossAction, grueMPlossOrder, 0, False, "none")
-
-grueMPvictoryAction = {
-	"PRINT" : "player won via MP",
-	"REMOVENPC" : "grue",
-	}
-grueMPvictoryOrder = ["PRINT", "REMOVENPC"]
-grueMPvictory = Event("none", "none", grueMPvictoryAction, grueSPvictoryOrder, 0, False, "none")
 ## END EVENT ASSIGNMENTS ##
 
 ## BEGIN ITEM ASSIGNMENTS ##
-boxContents = {
-	"key" : 1,
-	"cloth" : 5,
-	}
-box = Container("a box", "a wooden crate, covered in dust. It looks old, and has hinges on the back edge.", False, "an open wooden box, emanating a musty small from it's dark interior.", boxContents, "As you slowly open the box it's hinges give a protesting groan and despite your gentle motions you are surrounded by a plume of dust which slowly settles to the floor.", "You close the box with a creak.", False, False, False, "None, error", "none, error", True, "closeContainer", boxEvent)
-cloth = Item("a piece of cloth", "a small piece of dirty, off white cloth, smelling slightly of alcohol. Maybe, beer?", True, True, False, "light", "Protecting your hand with the cloth, you manage to gently remove the lightbulb from its fitting.", True, "useItem", bulbEvent)
-clothing = Item("simple clothing", "a simple outfit of various materials. It is far from fancy, or comfortable, but it is sufficient.", True, False, False, "none error", "none error", True, "dropItem", dropClothesEvent)
-wallet = Item("a small leather wallet", "a small and worn wallet made of leather, or maybe fake leather. It smells of dust.", True, False, False, "none error", "none error", False, "none, error", "none, error")
-shin = Item("a shin", "a shiny stick of metal and plastic, with an intricate patterns carved up the side. These are what is used as currency when barter will not suffice.", True, False, False, "none error", "none error", False, "none, error", "none, error")
-key = Item("a small key", "a small tarnished key of silver. it looks as though it hasn't been touched in  very long time.", True, False, False, "none error", "none error", True, "pickupItem", pickupKeyEvent)
-light = Item("a light", "a small, dull light bulb hanging from the ceiling by a thin cord.", False, True, True, "none, error", "You burn your hand as you try to touch the light. That wasn't very clever.", False, "none, error", "none, error")
-lightbulb = Item("a lightbulb", "a small lightbulb of murky brown glass. It appears to be in working order", True, True, False, "socket", "You gently screw the bulb into place, and are briefly blinded by its surprisingly bright light as it turns on again.", True, "useItem", socketEvent)
-socket = Item("an empty light socket", "an empty electrical socket hanging by a ting cord from the ceiling. It looks like it should have a lightbulb in it.", False, True, False, "lightbulb", "You gently screw the bulb into place, and are briefly blinded by its surprisingly bright light as it turns on again.", True, "useItem", socketEvent)
+
 ## END ITEM ASSIGNMENTS ##
 
 ## BEGIN ITEM LIST ##
-itemList = ["light", "box", "cloth", "clothing", "wallet", "shin", "key", "lightbulb", "socket",]
+itemList = []
 ## END ITEM LIST ##
 
 ## BEGIN STRUCTURE ASSIGNMENTS ##
-wall = Structure("a suspicious wall", "a wall that seems a little off. With a closer inspection, it almost sounds hollow.", False, False, "none", "none", True, hiddenDoorEvent)
+
 ## END STRUCTURE ASSIGNMENTS ##
 
 ## BEGIN STRUCTURE LIST ##
-structureList = ["wall",]
+structureList = []
 ## END STRUCTURE LIST ##
 
 ## BEGIN ZONE ASSGNMENTS ##
 TestRoomReferences = ["room", "area", "surroundings", "zone",]
 TestRoomDescription = "a small and uninteresting room. You don't remember how you got here, or even what this place is but you know it's the beginning of something much larger than you."
-TestRoomContents = {
-	"light" : 1,
-	"box" : 1,
-	"cloth" : 3,
-	}
-TestRoomExits = {
-	"south" : "TestHall",
-	}
+TestRoomContents = {}
+TestRoomExits = {}
 TestRoomStructures = []
-TestRoomNPCs = ["grue"]
-TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits, False, "none", "Not Locked, this is an error.", "Wasn't locked, this is an error.", False, "No key item, this is an error.", True, "enterZone", rollEvent, TestRoomStructures, TestRoomNPCs)
-
-TestHallReferences = ["room", "hall", "corridor", "area", "zone", "surroundings",]
-TestHallDescription = "a long, seemingly endless hallway. No matter how far you walk down it's length the door you came in through is always right behind you."
-TestHallContents = {
-	"cloth" : 1,
-	}
-TestHallExits = {
-	"north" : "TestRoom",
-	}
-TestHallStructures = []
-TestHallNPCs = []
-TestHall = Zone("Test Hall", TestHallReferences, TestHallDescription, TestHallContents, TestHallExits, True, "key", "A heavy wooden door bars your way. A small tarnished keyhole stares at you defiantly.", "With a dry click the key turns in the lock and the door swings open with an eerie creak.", True, "As you attempt the retrieve the key from the lock it surrenders to the ravages of time, snapping off with a gentle clang. You won't be getting that back.", True, "enterZone", testEvent, TestHallStructures, TestHallNPCs)
-
-DarkTestRoomReferences = ["room", "area", "surroundings", "zone",]
-DarkTestRoomDescription = "a pitch black room. You can hardly see a thing, and all you can feel is an empty light socket bumping against your MASSIVE head."
-DarkTestRoomContents = {
-	"socket" : 1,
-	}
-DarkTestRoomExits = {}
-DarkTestRoomStructures = []
-DarkTestRoomNPCs = []
-DarkTestRoom = Zone("Test Room", DarkTestRoomReferences, DarkTestRoomDescription, DarkTestRoomContents, DarkTestRoomExits, False, "none", "none", "none", False, "none", True, "searchZone", bobLightsEvent, DarkTestRoomStructures, DarkTestRoomNPCs)
-
-TestSecretRoomReferences = ["room", "zone", "area", "surroundings",]
-TestSecretRoomDescrption = "a tiny room, with more in common with a closet than an actual room."
-TestSecretRoomContents = {}
-TestSecretRoomExits = {
-	"west" : "TestRoom",
-	}
-TestSecretRoomStructures = []
-TestSecretRoomNPCs = ["bob"]
-TestSecretRoom = Zone("Secret Room", TestRoomReferences, TestSecretRoomDescrption, TestSecretRoomContents, TestSecretRoomExits, False, "none", "none", "none", False, "none", False, "none", "none", TestSecretRoomStructures, TestSecretRoomNPCs)
+TestRoomNPCs = []
+TestRoom = Zone("Test Room", TestRoomReferences, TestRoomDescription, TestRoomContents, TestRoomExits, False, "none", "Not Locked, this is an error.", "Wasn't locked, this is an error.", False, "No key item, this is an error.", False, "none", "none", TestRoomStructures, TestRoomNPCs)
 ## END ZONE ASSIGNMENTS ##
 
 ## BEGIN NPC CREATION ##
-bobInv = {
-	"clothing" : 1,
-	"wallet" : 1,
-	"shin" : 50,
-	}
-bobPronouns = {
-	"he" : "He",
-	"his" : "His",
-	"him" : "Him",
-	}
-bobConvo = {
-	"intro" : {
-		"introtext" : "'What can I help you with?'",
-		"none" : "'I'm sorry. My responses are limited, you must ask the right questions.'",
-		"who" : {
-			"introtext" : "Who do you want to know about?",
-			"me" : "'You? I don't know. If you can't remember then that's something you may want to look into.'",
-			"i" : "'You? I don't know. If you can't remember then that's something you may want to look into.'",
-			"you" : {
-				"introtext" : "What do you want to know about me?",
-				"who" : "'I'm Bob, the two dimensional test character who has even less programming behind him than a box. Give me time and I may become a bit more complicated. Until then fuck you and your organic privilege.",
-				"where" : "'I'm from nowhere in particular, which is a lovely place this time of year.'",
-				"why" : "'I'm only here because Nic needed a way to test NPCs quickly.'",
-				"how" : "'I got here through the magic of code. I'm also in the wall.'"
-				},
-			},
-		"here" : "'This is only a small test area. There are three different locations you can visit...well four technically, but as far as your concerned there are only three. Don't expect much from any of them though.'",
-		"fuck" : "'Watch your profamity.'",
-		"where" : "'This place is just a construct. A framework. Someday it may be a wondrous place of adventure, but right now it is the worldly equivalent of scaffolding held up by google and machete-like practises.'",
-		"goodbye" : "'Get the fuck out.'",
-		},
-	}
-bobEvent = {
-	"fuck" : "bobFuckEvent",
-	"me" : "bobMeEvent",
-	"how" : "bobHowEvent",
-	"playerHP_Victory" : "grueHPvictory",
-	"playerHP_Lose" : "grueHPloss",
-	"playerSP_Victory" : "grueSPvictory",
-	"playerSP_Lose" : "grueSPloss",
-	"playerMP_Victory" : "grueMPvictory",
-	"playerMP_Lose" : "grueMPloss",
-	}
-bob = NPC("Bob", bobPronouns, bobInv, 10, 10, 10, 100, 100, 100, "a short, uninteresting fellow with strange, oddly arranged facial features that you'd think make him easy to remember, but somehow have the opposite effect.", True, "none", bobEvent, bobConvo, False, playerAttacks)
 
-grueInv = {
-	"shin" : 10,
-	}
-gruePronouns = {
-	"he" : "it",
-	"his" : "its",
-	"him" : "it",
-	}
-grueConvo = {
-    "intro" : {
-        "introtext" : "Leave me be, human.",
-        "none" : "I said go away!",
-        "goodbye" : "Hisss!",
-        },
-    }
-grueEvents = {
-	"playerHP_Victory" : "grueHPvictory",
-	"playerHP_Lose" : "grueHPloss",
-	"playerSP_Victory" : "grueSPvictory",
-	"playerSP_Lose" : "grueSPloss",
-	"playerMP_Victory" : "grueMPvictory",
-	"playerMP_Lose" : "grueMPloss",	
-	}
-grueAttacks = {
-	"HP" : ["The Grue lashes out with it's claws.", "The Grue viciously headbutts you.",],
-	"SP" : ["With a quick action the Grue slings sand and dirt into your face.", "The Grue flashe it's version of genitals at you. You won't be able to get THST image out of your head for a while.",],
-	"MP" : ["The Grue briefly closes its eyes in an expression of focus and you feel a bolt of pain throughout your body.", "The Grue slings a small bottle at you, which shatters mid-air, coating you in a mist of liquid, leaving you groggy."]
-	}
-grue = NPC("Grue", gruePronouns, grueInv, 5, 5, 5, 50, 50, 50, "a small reptilian looking beast with far too many teeth.", False, "none", grueEvents, grueConvo, True, grueAttacks)
 ## END NPC CREATION ##
 
 def stringContains(word, phrase):##this guy finds a word in a phrase, and can be asked in a manner consistent with the rest of python.
@@ -1414,17 +1134,6 @@ def Scene(Location, Character):##====This is the current scene. All commands and
 		else:
 			print("Command not recognised.")
 			Scene(Location, Character)
-			
-def boot():##=========================Just the boot screen
-	print("ITER: The Journey.")
-	print("Coming Soon.")
-	print("----------")
-	print("Type your name to enter the test room.")
-	cmd = input(">>>")
-	Player.name = cmd
-	print("Welcome %s." % (Player.name))
-	print("----------")
-	ChangeLocation(TestRoom, TestRoom, Player)
 
 def stringToClass(str):##This is meant to turn strings into class names.
 	return getattr(sys.modules[__name__], str)
@@ -1491,6 +1200,14 @@ def enemyAttack(player, enemy, location):
 			Battle(player, enemy, location)		
 
 def BattleComplete(cause, PC, NPC, location):##called when the battle is complete.
+	print("The %s is defeated, dropping:" % NPC.name)
+	for i in NPC.inventory:
+		location.addItem(i, NPC.inventory[i])
+		if NPC.inventory[i] > 1:
+			print(str(NPC.inventory[i]) + " " + i + "s")
+		else:
+			print("a %s" % i)
+	print("----------")
 	stringToClass(NPC.Event[cause]).triggerEvent(location, PC)
 			
 def Battle(player, enemy, location):
@@ -1570,4 +1287,15 @@ def Battle(player, enemy, location):
 		print("Command not recognized")
 		Battle(player, enemy, location)
 		
+def boot():##=========================Just the boot screen
+	print("ITER: The Journey.")
+	print("Coming Soon.")
+	print("----------")
+	print("Type your name to enter the test room.")
+	cmd = input(">>>")
+	Player.name = cmd
+	print("Welcome %s." % (Player.name))
+	print("----------")
+	ChangeLocation(TestRoom, TestRoom, Player)
+
 boot()##====================the only base level command if at all possible.
