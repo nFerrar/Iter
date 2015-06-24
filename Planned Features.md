@@ -1,7 +1,10 @@
 NPC Interaction
 ---
 
-Give and take items.
+Give and take items. - Can be fudged through events.
+
+When below tasks are complete we are at 1.0
+===
 
 Combat System
 ---
