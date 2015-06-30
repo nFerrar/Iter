@@ -212,7 +212,7 @@ class Container(Item):##this is much like an item, except it has an inventory of
 	
 	tempD = {}
 
-	def __init__(self, name, description, bPickUp, openDescription, contents, openText, closeText, bOpen, bUseable, bUseAlone, useWith, useText, bEvent, Trigger, Event):
+	def __init__(self, name, description, bPickUp, openDescription, contents, openText, closeText, bOpen, bUseable, bUseAlone, useWith, useText, bEvent, Trigger, Event, bLocked, keyItem, lockedText, unlockText, lockedDesc):
 		self.name = name
 		self.description = description
 		self.bPickUp = bPickUp
@@ -228,23 +228,48 @@ class Container(Item):##this is much like an item, except it has an inventory of
 		self.bEvent = bEvent
 		self.Trigger = Trigger
 		self.Event = Event
+		self.bLocked = bLocked
+		self.keyItem = keyItem
+		self.lockedText = lockedText
+		self.unlockText = unlockText
+		self.lockedDesc = lockedDesc
 		
 	def describeItem(self):
 		if(self.bOpen == False):
-			print("It's %s" % (self.description))
+			if(self.bLocked == False):
+				print("It's %s" % (self.description))
+			else:
+				print("It's %s" % (seld.lockedDesc))
 		else:
 			print("It's %s" % (self.openDescription))
 	
 	def openContainer(self, Location, Character):
-		self.bOpen = True
-		print(self.openText + " Inside you see")
-		for i in self.contents:
-			if(self.contents[i] > 1):
-				print(str(self.contents[i]) + " " + i)
-				Location.addItem(i, self.contents[i])
+		if(self.bLocked == False):
+			self.bOpen = True
+			print(self.openText + " Inside you see")
+			for i in self.contents:
+				if(self.contents[i] > 1):
+					print(str(self.contents[i]) + " " + i)
+					Location.addItem(i, self.contents[i])
+				else:
+					print(i)
+					Location.addItem(i, 1)
+		else:
+			for i in Character.inventory:
+				if(i == keyItem):
+					print(unlockText)
+					self.bOpen = True
+					print(self.openText + " Inside you see")
+					for i in self.contents:
+						if(self.contents[i] > 1):
+							print(str(self.contents[i]) + " " + i)
+							Location.addItem(i, self.contents[i])
+						else:
+							print(i)
+							Location.addItem(i, 1)
+					break
 			else:
-				print(i)
-				Location.addItem(i, 1)
+				print(lockedText)
 				
 	def closeContainer(self, Location, Character):
 		self.bOpen = False
@@ -1005,13 +1030,13 @@ Player = PC("Dickbutt", "short, ugly and kind of intangible being who is the clo
 
 ## END EVENT ASSIGNMENTS ##
 
-## BEGIN ITEM ASSIGNMENTS ##
+## BEGIN ITEM/CONTAINER ASSIGNMENTS ##
 
-## END ITEM ASSIGNMENTS ##
+## END ITEM/CONTAINER ASSIGNMENTS ##
 
-## BEGIN ITEM LIST ##
+## BEGIN ITEM/CONTAINER LIST ##
 itemList = []
-## END ITEM LIST ##
+## END ITEM/CONTAINER LIST ##
 
 ## BEGIN STRUCTURE ASSIGNMENTS ##
 
