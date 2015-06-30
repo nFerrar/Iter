@@ -63,6 +63,8 @@ attack
 - initiates combat with designated NPC, you can fight anyone.
 
 self
+---
+
 - works as examine for the PC, give you current stats and description.
 
 help 
