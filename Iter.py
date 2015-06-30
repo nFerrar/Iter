@@ -19,13 +19,16 @@ class Person(object):##this is a generic person, with a name, inventory and basi
 		self.Attacks = Attacks
 	
 	def addToInventory(self, newItem, quantity):
-		for i in self.inventory:
-			if(newItem == i):
-				self.inventory[i] = self.inventory[i] + quantity
-				break
-			else:
-				self.inventory[newItem] = quantity
-				break
+		if(len(self.inventory) > 0):
+			for i in self.inventory:
+				if(newItem == i):
+					self.inventory[i] = self.inventory[i] + quantity
+					break
+				else:
+					self.inventory[newItem] = quantity
+					break
+		else:
+			self.inventory[newItem] = quantity
 			
 	def removeFromInventory(self, item, quantity):
 		for i in self.inventory:
@@ -212,7 +215,7 @@ class Container(Item):##this is much like an item, except it has an inventory of
 	
 	tempD = {}
 
-	def __init__(self, name, description, bPickUp, openDescription, contents, openText, closeText, bOpen, bUseable, bUseAlone, useWith, useText, bEvent, Trigger, Event, bLocked, keyItem, lockedText, unlockText, lockedDesc):
+	def __init__(self, name, description, bPickUp, openDescription, contents, openText, closeText, bOpen, bUseable, bUseAlone, useWith, useText, bEvent, Trigger, Event, bLocked, keyItem, lockedText, unlockText, lockedDesc, bDestroyKey, keyDestroyText):
 		self.name = name
 		self.description = description
 		self.bPickUp = bPickUp
@@ -233,13 +236,15 @@ class Container(Item):##this is much like an item, except it has an inventory of
 		self.lockedText = lockedText
 		self.unlockText = unlockText
 		self.lockedDesc = lockedDesc
+		self.bDestroyKey = bDestroyKey
+		self.keyDestroyText = keyDestroyText
 		
 	def describeItem(self):
 		if(self.bOpen == False):
 			if(self.bLocked == False):
 				print("It's %s" % (self.description))
 			else:
-				print("It's %s" % (seld.lockedDesc))
+				print("It's %s" % (self.lockedDesc))
 		else:
 			print("It's %s" % (self.openDescription))
 	
@@ -256,8 +261,11 @@ class Container(Item):##this is much like an item, except it has an inventory of
 					Location.addItem(i, 1)
 		else:
 			for i in Character.inventory:
-				if(i == keyItem):
-					print(unlockText)
+				if(i == self.keyItem):
+					print(self.unlockText)
+					self.bLocked = False
+					if(self.bDestroyKey == True):
+						print(self.keyDestroyText)
 					self.bOpen = True
 					print(self.openText + " Inside you see")
 					for i in self.contents:
@@ -267,9 +275,11 @@ class Container(Item):##this is much like an item, except it has an inventory of
 						else:
 							print(i)
 							Location.addItem(i, 1)
+					if(self.bDestroyKey == True):
+						Character.removeFromInventory(self.keyItem, 1)
 					break
 			else:
-				print(lockedText)
+				print(self.lockedText)
 				
 	def closeContainer(self, Location, Character):
 		self.bOpen = False
@@ -1004,7 +1014,6 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		print("Body:   %s" % (str(Character.Body)))
 		print("Spirit: %s" % (str(Character.Spirit)))
 		print("Mind:   %s" % (str(Character.Mind)))
-		print("----------")
 		Scene(Location, Character)
 	
 ## START PLAYER COMMANDS## NO TOUCHING ##
