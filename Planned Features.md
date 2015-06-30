@@ -27,4 +27,4 @@ Proof of concept: random events now working with nested information!
 Lockable Containers
 ---
 
-Make Containers lockable. This would be a cool thing.
+Make Containers lockable. This would be a cool thing. - IN PROGRESS: just needs to be tested now
