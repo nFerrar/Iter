@@ -1001,9 +1001,9 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		print("SP: %s" % (str(Character.SP)))
 		print("MP: %s" % (str(Character.MP)))
 		print("----------")
-		print("Body: %s" % (str(Character.Body)))
+		print("Body:   %s" % (str(Character.Body)))
 		print("Spirit: %s" % (str(Character.Spirit)))
-		print("Mind: %s" % (str(Character.Mind)))
+		print("Mind:   %s" % (str(Character.Mind)))
 		print("----------")
 		Scene(Location, Character)
 	
