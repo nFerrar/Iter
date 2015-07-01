@@ -11,8 +11,8 @@ Combat System
 
 Consequences, - IN PROGRESS, defeated NPCs are now removed from location ADD PLAYER CONSEQUENCES TOO DOOFUS!
 
-Better attack controls,
+Better attack controls - EHHHHHHH, not needed, pending GUI.
 
-Defence action,
+Defence action - DONE, albeit simple.
 
 Loot - IN PROGRESS defeated enemies now drop inventory to Zone.
