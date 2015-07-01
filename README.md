@@ -114,10 +114,4 @@ None, this may itself be a bug though.
 
 # To do, in something resembling an order of priority:
 
-Add functionality for NPC inventories and deeper conversation trees that can !trigger events!
-
-Enhance the Combat System.
-
-Rebuild events to be more smarter when handling quantities.
-
 ?Quest System?
