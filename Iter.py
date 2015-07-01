@@ -136,13 +136,16 @@ class Zone(object):##this is all rooms and areas the player will be in. It has a
 				print("%s is here." % (stringToClass(c).name))
 				
 	def addItem(self, item, quantity):
-		for i in self.contents:
-			if(item == i):
-				self.contents[i] = self.contents[i] + quantity
-				break		
-			else:
-				self.contents[item] = quantity
-				break
+		if(len(self.contents) > 0):
+			for i in self.contents:
+				if(item == i):
+					self.contents[i] = self.contents[i] + quantity
+					break		
+				else:
+					self.contents[item] = quantity
+					break
+		else:
+			self.contents[item] = quantity
 	
 	def removeItem(self, item, quantity):
 		for i in self.contents:
@@ -445,6 +448,42 @@ class Event(object):##these are events, where the majority of the Engines power 
 
 	def RANDOMEVENT(self, eventList):##Rolls through a list of events and picks one at random.
 		stringToClassDef(stringToClass(eventList[random.randint(0, len(eventList)-1)]), "triggerEvent")(self.Location, self.Character)
+	
+	def MODIFYPCHP(self, mod):
+		Character.HP += mod
+	
+	def MODIFYPCSP(self, mod):
+		Character.SP += mod
+	
+	def MODIFYPCMP(self, mod):
+		Character.MP += mod
+		
+	def MODIFYPCMIND(self, mod):
+		Character.Mind += mod
+		
+	def MODIFYPCBODY(self, mod):
+		Character.Body += mod
+		
+	def MODIFYPCSPIRIT(self, mod):
+		Character.Spirit += mod
+		
+	def SETPCHP(self, mod):
+		Character.HP = mod
+	
+	def SETPCSP(self, mod):
+		Character.SP = mod
+	
+	def SETPCMP(self, mod):
+		Character.MP = mod
+		
+	def SETPCMIND(self, mod):
+		Character.Mind = mod
+		
+	def SETPCBODY(self, mod):
+		Character.Body = mod
+		
+	def SETPCSPIRIT(self, mod):
+		Character.Spirit = mod
 			
 class PlayerCommands(object):##These are all the commands the player can perform, they are as dynamic as possible.
 	def __init__(self):
@@ -1175,72 +1214,131 @@ def stringToClass(str):##This is meant to turn strings into class names.
 def stringToClassDef(className, defName):##This takes strings and makes them a def name within a class. className.defName is the result. can be handed arguments
 	return getattr(className, defName)
 	
-def enemyAttack(player, enemy, location):
+def enemyAttack(player, enemy, location, bDefend):
 	atk = random.randint(0, 2)
 	
-	if atk == 0:
-		if(player.Body + random.randint(1, 20) < enemy.Body + random.randint(1, 20)):
-			Edmg = int(random.randint(0, enemy.HP) / 2)
-			print(enemy.Attacks["HP"][random.randint(0, len(enemy.Attacks["HP"])-1)])
-			print("You receive " + str(Edmg) + " HP damage.")
-			player.HP -= Edmg
-			print("----------")
-			if player.HP <= 0:
-				enemy.bAggressive = False
-				BattleComplete("playerHP_Lose", player, enemy, location)
-			else:
-				Battle(player, enemy, location)
+	if(bDefend == False):
+		if atk == 0:
+			if(player.Body + random.randint(1, 20) < enemy.Body + random.randint(1, 20)):
+				Edmg = int(random.randint(0, enemy.HP) / 2)
+				print(enemy.Attacks["HP"][random.randint(0, len(enemy.Attacks["HP"])-1)])
+				print("You receive " + str(Edmg) + " HP damage.")
+				player.HP -= Edmg
+				print("----------")
+				if player.HP <= 0:
+					enemy.bAggressive = False
+					BattleComplete("playerHP_Lose", player, enemy, location)
+				else:
+					Battle(player, enemy, location)
 
-		else:
-			print(enemy.Attacks["HP"][random.randint(0, len(enemy.Attacks["HP"])-1)])
-			print("You manage to avoid taking damage.")
-			print("----------")
-			Battle(player, enemy, location)
-			
-	if atk == 1:
-		if(player.Spirit + random.randint(1, 20) < enemy.Spirit + random.randint(1, 20)):
-			Edmg = int(random.randint(0, enemy.SP) / 2)
-			print(enemy.Attacks["SP"][random.randint(0, len(enemy.Attacks["SP"])-1)])
-			print("You receive " + str(Edmg) + " SP damage.")
-			player.SP -= Edmg
-			print("----------")
-			if player.SP <= 0:
-				enemy.bAggressive = False
-				BattleComplete("playerSP_Lose", player, enemy, location)
 			else:
+				print(enemy.Attacks["HP"][random.randint(0, len(enemy.Attacks["HP"])-1)])
+				print("You manage to avoid taking damage.")
+				print("----------")
 				Battle(player, enemy, location)
-		else:
-			print(enemy.Attacks["SP"][random.randint(0, len(enemy.Attacks["SP"])-1)])
-			print("You manage to avoid taking damage.")
-			print("----------")
-			Battle(player, enemy, location)
-			
-	if atk == 2:
-		if(player.Mind + random.randint(1, 20) < enemy.Mind + random.randint(1, 20)):
-			Edmg = int(random.randint(0, enemy.MP) / 2)
-			print(enemy.Attacks["MP"][random.randint(0, len(enemy.Attacks["MP"])-1)])
-			print("You receive " + str(Edmg) + " MP damage.")
-			player.MP -= Edmg
-			print("----------")
-			if player.MP <= 0:
-				enemy.bAggressive = False
-				BattleComplete("playerMP_Lose", player, enemy, location)
+				
+		if atk == 1:
+			if(player.Spirit + random.randint(1, 20) < enemy.Spirit + random.randint(1, 20)):
+				Edmg = int(random.randint(0, enemy.SP) / 2)
+				print(enemy.Attacks["SP"][random.randint(0, len(enemy.Attacks["SP"])-1)])
+				print("You receive " + str(Edmg) + " SP damage.")
+				player.SP -= Edmg
+				print("----------")
+				if player.SP <= 0:
+					enemy.bAggressive = False
+					BattleComplete("playerSP_Lose", player, enemy, location)
+				else:
+					Battle(player, enemy, location)
 			else:
+				print(enemy.Attacks["SP"][random.randint(0, len(enemy.Attacks["SP"])-1)])
+				print("You manage to avoid taking damage.")
+				print("----------")
 				Battle(player, enemy, location)
-		else:
-			print(enemy.Attacks["MP"][random.randint(0, len(enemy.Attacks["MP"])-1)])
-			print("You manage to avoid taking damage.")
-			print("----------")
-			Battle(player, enemy, location)		
+				
+		if atk == 2:
+			if(player.Mind + random.randint(1, 20) < enemy.Mind + random.randint(1, 20)):
+				Edmg = int(random.randint(0, enemy.MP) / 2)
+				print(enemy.Attacks["MP"][random.randint(0, len(enemy.Attacks["MP"])-1)])
+				print("You receive " + str(Edmg) + " MP damage.")
+				player.MP -= Edmg
+				print("----------")
+				if player.MP <= 0:
+					enemy.bAggressive = False
+					BattleComplete("playerMP_Lose", player, enemy, location)
+				else:
+					Battle(player, enemy, location)
+			else:
+				print(enemy.Attacks["MP"][random.randint(0, len(enemy.Attacks["MP"])-1)])
+				print("You manage to avoid taking damage.")
+				print("----------")
+				Battle(player, enemy, location)
+				
+	else:
+		if atk == 0:
+			if(player.Body + random.randint(10, 30) < enemy.Body + random.randint(1, 20)):
+				Edmg = int(random.randint(0, enemy.HP) / 2)
+				print(enemy.Attacks["HP"][random.randint(0, len(enemy.Attacks["HP"])-1)])
+				print("You receive " + str(Edmg) + " HP damage.")
+				player.HP -= Edmg
+				print("----------")
+				if player.HP <= 0:
+					enemy.bAggressive = False
+					BattleComplete("playerHP_Lose", player, enemy, location)
+				else:
+					Battle(player, enemy, location)
+			else:
+				print(enemy.Attacks["HP"][random.randint(0, len(enemy.Attacks["HP"])-1)])
+				print("You manage to avoid taking damage.")
+				print("----------")
+				Battle(player, enemy, location)
+				
+		if atk == 1:
+			if(player.Spirit + random.randint(10, 30) < enemy.Spirit + random.randint(1, 20)):
+				Edmg = int(random.randint(0, enemy.SP) / 2)
+				print(enemy.Attacks["SP"][random.randint(0, len(enemy.Attacks["SP"])-1)])
+				print("You receive " + str(Edmg) + " SP damage.")
+				player.SP -= Edmg
+				print("----------")
+				if player.SP <= 0:
+					enemy.bAggressive = False
+					BattleComplete("playerSP_Lose", player, enemy, location)
+				else:
+					Battle(player, enemy, location)
+			else:
+				print(enemy.Attacks["SP"][random.randint(0, len(enemy.Attacks["SP"])-1)])
+				print("You manage to avoid taking damage.")
+				print("----------")
+				Battle(player, enemy, location)
+				
+		if atk == 2:
+			if(player.Mind + random.randint(10, 30) < enemy.Mind + random.randint(1, 20)):
+				Edmg = int(random.randint(0, enemy.MP) / 2)
+				print(enemy.Attacks["MP"][random.randint(0, len(enemy.Attacks["MP"])-1)])
+				print("You receive " + str(Edmg) + " MP damage.")
+				player.MP -= Edmg
+				print("----------")
+				if player.MP <= 0:
+					enemy.bAggressive = False
+					BattleComplete("playerMP_Lose", player, enemy, location)
+				else:
+					Battle(player, enemy, location)
+			else:
+				print(enemy.Attacks["MP"][random.randint(0, len(enemy.Attacks["MP"])-1)])
+				print("You manage to avoid taking damage.")
+				print("----------")
+				Battle(player, enemy, location)		
 
 def BattleComplete(cause, PC, NPC, location):##called when the battle is complete.
-	print("The %s is defeated, dropping:" % NPC.name)
-	for i in NPC.inventory:
-		location.addItem(i, NPC.inventory[i])
-		if NPC.inventory[i] > 1:
-			print(str(NPC.inventory[i]) + " " + i + "s")
-		else:
-			print("a %s" % i)
+	if(len(NPC.inventory) > 0):
+		print("The %s is defeated, dropping:" % NPC.name)
+		for i in NPC.inventory:
+			location.addItem(i, NPC.inventory[i])
+			if NPC.inventory[i] > 1:
+				print(str(NPC.inventory[i]) + " " + i + "s")
+			else:
+				print("a %s" % i)
+	else:
+		print("The %s is defeated, dropping no items." % NPC.name)
 	print("----------")
 	stringToClass(NPC.Event[cause]).triggerEvent(location, PC)
 			
@@ -1263,7 +1361,16 @@ def Battle(player, enemy, location):
 	cmd = input(">>Attack>>")
 	print("----------")
 	
-	if cmd == "":
+	if cmd.lower() == "help":
+		print("Available Battle Commands:")
+		print("'Body'   -   A basic attack.")
+		print("'Spirit' -   Perform a spiritual attack on your enemy.")
+		print("'Mind'   -   Attack your enemy's mind.")
+		print("'Defend' -   Ready yourself for any enemy attack.")
+		print("----------")
+		Battle(player, enemy, location)
+	
+	if cmd.lower() == "body":
 		if(player.Body + random.randint(1, 20) > enemy.Body + random.randint(1, 20)):
 			dmg = int(random.randint(0, player.HP) / 2)
 			print(player.Attacks["HP"][random.randint(0, len(player.Attacks["HP"]) -1)] + " causing " + str(dmg) + " HP damage.")
@@ -1275,13 +1382,13 @@ def Battle(player, enemy, location):
 				BattleComplete("playerHP_Victory", player, enemy, location)
 			
 			else:		
-				enemyAttack(player, enemy, location)
+				enemyAttack(player, enemy, location, False)
 		else:
 			print(player.Attacks["HP"][random.randint(0, len(player.Attacks["HP"]) -1)] + " but your attack misses.")
 			print("----------")
-			enemyAttack(player, enemy, location)
+			enemyAttack(player, enemy, location, False)
 				
-	if cmd == "spirit":
+	if cmd.lower() == "spirit":
 		if(player.Spirit + random.randint(1, 20) > enemy.Spirit + random.randint(1, 20)):
 			dmg = int(random.randint(0, player.SP) / 2)
 			print(player.Attacks["SP"][random.randint(0, len(player.Attacks["SP"]) -1)] + " causing " + str(dmg) + " SP damage.")
@@ -1293,13 +1400,13 @@ def Battle(player, enemy, location):
 				BattleComplete("playerSP_Victory", player, enemy, location)
 			
 			else:		
-				enemyAttack(player, enemy, location)
+				enemyAttack(player, enemy, location, False)
 		else:
 			print(player.Attacks["SP"][random.randint(0, len(player.Attacks["SP"]) -1)] + " but your attack fails.")
 			print("----------")
-			enemyAttack(player, enemy, location)
+			enemyAttack(player, enemy, location, False)
 				
-	if cmd == "mind":
+	if cmd.lower() == "mind":
 		if(player.Mind + random.randint(1, 20) > enemy.Mind + random.randint(1, 20)):
 			dmg = int(random.randint(0, player.MP) / 2)
 			print(player.Attacks["MP"][random.randint(0, len(player.Attacks["MP"]) -1)] + " causing " + str(dmg) + " MP damage.")
@@ -1311,14 +1418,20 @@ def Battle(player, enemy, location):
 				BattleComplete("playerMP_Victory", player, enemy, location)
 			
 			else:		
-				enemyAttack(player, enemy, location)
+				enemyAttack(player, enemy, location, False)
 		else:
 			print(player.Attacks["MP"][random.randint(0, len(player.Attacks["MP"]) -1)] + " but your attack fails.")
 			print("----------")
-			enemyAttack(player, enemy, location)
+			enemyAttack(player, enemy, location, False)
 
+	if cmd.lower() == "defend":
+		print("You ready yourself for any attacks that may come.")
+		print("----------")
+		enemyAttack(player, enemy, location, True)
+			
 	else:
 		print("Command not recognized")
+		print("----------")
 		Battle(player, enemy, location)
 		
 def boot():##=========================Just the boot screen
