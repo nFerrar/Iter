@@ -443,7 +443,7 @@ class Event(object):##these are events, where the majority of the Engines power 
 	def ADDTONPCINVENTORY(self, item):##Adds item to the active NPCs inventory
 		stringToClass(item[0]).addToInventory(item[1], item[2])
 	
-	def REMOVEFROMACTIVENPCINVENTORY(self, item):##Removes item from active NPC inventory.
+	def REMOVEFROMNPCINVENTORY(self, item):##Removes item from active NPC inventory.
 		stringToClass(item[0]).removeFromInventory(item[1], item[2])
 
 	def RANDOMEVENT(self, eventList):##Rolls through a list of events and picks one at random.
