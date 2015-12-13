@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 import os
 import time
 import collections
@@ -319,7 +319,7 @@ class Structure(object):##Base class for things like doors, walls and pillars of
 			if(self.bUseAlone == True):
 				self.useEvent.triggerEvent(Location, Character)
 			else:
-				cmd = input("What do you want use on it? >>>")
+				cmd = raw_input("What do you want use on it? >>>")
 				
 				if(cmd.lower() == self.otherItem):
 					for i in Character.inventory:
@@ -530,7 +530,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					break
 			
 		else:
-			cmd = input("Examine what? >>>")
+			cmd = raw_input("Examine what? >>>")
 			
 			for i in Location.references:
 				if(cmd.lower() == i):
@@ -587,7 +587,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		Scene(Location, Character)
 		
 	def quit(self, Location, Character, Command):##lets you quit, has a confirmation. NO SAVE BITCHES. YOLO
-		cmd = input("Are you sure you want to quit?")
+		cmd = raw_input("Are you sure you want to quit?")
 		
 		if(cmd.lower() == "y" or cmd.lower() == "yes"):
 			print("Shutting Down...")
@@ -621,7 +621,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 						Scene(Location, Character)
 			
 		else:
-			cmd = input("Open what? >>>")
+			cmd = raw_input("Open what? >>>")
 			
 			for i in Location.contents:
 				if(i == cmd.lower()):
@@ -659,7 +659,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 						Scene(Location, Character)
 			
 		else:
-			cmd = input("Close what? >>>")
+			cmd = raw_input("Close what? >>>")
 			
 			for i in Location.contents:
 				if(i == cmd.lower()):
@@ -694,7 +694,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 						Scene(Location, Character)
 			
 		else:
-			cmd = input("What would you like to pick up? >>>")
+			cmd = raw_input("What would you like to pick up? >>>")
 			
 			for l in Location.contents:
 				if(l == cmd.lower()):
@@ -716,7 +716,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 		if(len(Command) > 4):
 			for l in Character.inventory:
 				if(stringContains(l, Command) == True):
-					q = input("Drop how many? >>>")
+					q = raw_input("Drop how many? >>>")
 						
 					try:
 						if(int(q) <= Character.inventory[l]):
@@ -733,11 +733,11 @@ class PlayerCommands(object):##These are all the commands the player can perform
 						Scene(Location, Character)
 					
 		else:
-			cmd = input("What do you want to drop? >>>")
+			cmd = raw_input("What do you want to drop? >>>")
 			
 			for l in Character.inventory:
 				if(l == cmd.lower()):
-					q = input("Drop how many? >>>")
+					q = raw_input("Drop how many? >>>")
 					
 					try:
 						if(int(q) <= Character.inventory[cmd.lower()]):
@@ -788,7 +788,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 				Scene(Location, Character)
 		
 		else:
-			cmd = input("Which direction do you want to go? >>>")
+			cmd = raw_input("Which direction do you want to go? >>>")
 			
 			for d in Location.exits:
 				if(d == cmd.lower()):
@@ -829,7 +829,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 								break
 
 							else:
-								u = input("Use with what? >>>")
+								u = raw_input("Use with what? >>>")
 								for x in Character.inventory:
 									if(stringContains(x, u) == True):
 										if(stringToClass(i).useWith == x):
@@ -869,7 +869,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 							break
 
 						else:
-							u = input("Use with what? >>>")
+							u = raw_input("Use with what? >>>")
 							for x in Character.inventory:
 								if(stringContains(x, u) == True):
 									if(stringToClass(i).useWith == x):
@@ -908,7 +908,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 			
 			
 		else:
-			cmd = input("Use what? >>>")
+			cmd = raw_input("Use what? >>>")
 			
 			for i in Character.inventory:
 				if(cmd.lower() == i):
@@ -919,7 +919,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 							break
 
 						else:
-							u = input("Use with what? >>>")
+							u = raw_input("Use with what? >>>")
 							for x in Character.inventory:
 								if(u.lower() == x):
 									if(stringToClass(cmd.lower()).useWith == x):
@@ -959,7 +959,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 							break
 
 						else:
-							u = input("Use with what? >>>")
+							u = raw_input("Use with what? >>>")
 							for x in Character.inventory:
 								if(u.lower() == x):
 									if(stringToClass(cmd.lower()).useWith == x):
@@ -1009,7 +1009,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					Conversation(Location, Character, stringToClass(c), stringToClass(c).Convo["intro"], stringToClass(c).Convo["intro"])
 					break
 		else:
-			cmd = input("Who do you want to talk to? >>>")
+			cmd = raw_input("Who do you want to talk to? >>>")
 			
 			for c in Location.npcs:
 				if(cmd.lower() == c):
@@ -1030,7 +1030,7 @@ class PlayerCommands(object):##These are all the commands the player can perform
 					Scene(Location, Character)
 					break
 		else:
-			cmd = input("Who do you want to attack? >>>")
+			cmd = raw_input("Who do you want to attack? >>>")
 			
 			for c in Location.npcs:
 				if(stringContains(c, cmd) == True):
@@ -1126,7 +1126,7 @@ def bDeeper(dictValue):##This checks if there i a deeper level of conversation
 	
 def Conversation(Location, Character, NPC, stage, previousStage):##conversation 'scene'. KISS STRIKES AGAIN, WAIT EVENT NOT WORKING
 	
-	cmd = input(">>Say>>")
+	cmd = raw_input(">>Say>>")
 	
 	if(cmd.lower() == "back" or cmd.lower() == "nevermind"):
 		print("<<" + NPC.name + "<<" + previousStage["introtext"])
@@ -1198,7 +1198,7 @@ def Scene(Location, Character):##====This is the current scene. All commands and
 			break
 	else:
 		print("----------")##clock could go here.
-		cmd = input(">>>")
+		cmd = raw_input(">>>")
 		
 		for i in Commands:
 			if(stringContains(i, cmd) == True):
@@ -1358,7 +1358,7 @@ def Battle(player, enemy, location):
 	print("SP: %s" % (str(player.SP)))
 	print("MP: %s" % (str(player.MP)))
 	print("----------")
-	cmd = input(">>Attack>>")
+	cmd = raw_input(">>Attack>>")
 	print("----------")
 	
 	if cmd.lower() == "help":
@@ -1439,7 +1439,7 @@ def boot():##=========================Just the boot screen
 	print("Coming Soon.")
 	print("----------")
 	print("Type your name to enter the test room.")
-	cmd = input(">>>")
+	cmd = raw_input(">>>")
 	Player.name = cmd
 	print("Welcome %s." % (Player.name))
 	print("----------")
